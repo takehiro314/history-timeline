@@ -932,6 +932,33 @@
       overflow-y: hidden;
       padding: 14px 12px 18px;
       background: #fbfcfa;
+      overscroll-behavior: contain;
+    }
+
+    .mobile-timeline.is-pinching {
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .mobile-zoom-hint {
+      position: sticky;
+      left: 10px;
+      top: 8px;
+      z-index: 5;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.92);
+      color: var(--muted);
+      padding: 4px 9px;
+      font-size: 11px;
+      font-weight: 750;
+      box-shadow: 0 1px 0 rgba(32, 36, 33, 0.04);
+      pointer-events: none;
+      backdrop-filter: blur(8px);
     }
 
     .mobile-timeline-track {
@@ -2216,6 +2243,15 @@
       moved: false
     };
 
+    const timelinePinch = {
+      active: false,
+      startDistance: 0,
+      startScale: 15,
+      lastScale: 15,
+      rafId: 0,
+      moved: false
+    };
+
     const els = {
       projectTitle: document.getElementById("projectTitle"),
       saveState: document.getElementById("saveState"),
@@ -2406,6 +2442,10 @@
       els.timelineView.addEventListener("pointerup", endTimelineDrag);
       els.timelineView.addEventListener("pointercancel", endTimelineDrag);
       els.timelineView.addEventListener("lostpointercapture", endTimelineDrag);
+      els.timelineView.addEventListener("touchstart", startTimelinePinch, { passive: false });
+      els.timelineView.addEventListener("touchmove", moveTimelinePinch, { passive: false });
+      els.timelineView.addEventListener("touchend", endTimelinePinch);
+      els.timelineView.addEventListener("touchcancel", endTimelinePinch);
       els.tableBody.addEventListener("click", handleTableAction);
 
       els.sampleBtn.addEventListener("click", () => {
@@ -2572,6 +2612,62 @@
       removeEvent(item.id);
     }
 
+    function touchDistance(touches) {
+      if (!touches || touches.length < 2) return 0;
+      const dx = touches[0].clientX - touches[1].clientX;
+      const dy = touches[0].clientY - touches[1].clientY;
+      return Math.hypot(dx, dy);
+    }
+
+    function startTimelinePinch(event) {
+      if (state.view !== "timeline" || !isCompactViewport() || event.touches.length !== 2) return;
+      const distance = touchDistance(event.touches);
+      if (!distance) return;
+      timelinePinch.active = true;
+      timelinePinch.startDistance = distance;
+      timelinePinch.startScale = timelinePixelsPerYear();
+      timelinePinch.lastScale = timelinePinch.startScale;
+      timelinePinch.moved = false;
+      els.timelineView.querySelector(".mobile-timeline")?.classList.add("is-pinching");
+      event.preventDefault();
+    }
+
+    function moveTimelinePinch(event) {
+      if (!timelinePinch.active || event.touches.length !== 2) return;
+      const distance = touchDistance(event.touches);
+      if (!distance || !timelinePinch.startDistance) return;
+      const nextScale = timelineYearScaleValue(timelinePinch.startScale * (distance / timelinePinch.startDistance));
+      if (nextScale !== timelinePinch.lastScale) {
+        timelinePinch.lastScale = nextScale;
+        timelinePinch.moved = true;
+        if (!timelinePinch.rafId) {
+          timelinePinch.rafId = window.requestAnimationFrame(() => {
+            timelinePinch.rafId = 0;
+            state.yearScale = timelinePinch.lastScale;
+            renderAll();
+            els.yearScaleSelect.value = String(state.yearScale);
+            els.yearScaleLabel.textContent = `${state.yearScale}px`;
+            els.timelineView.querySelector(".mobile-timeline")?.classList.add("is-pinching");
+          });
+        }
+      }
+      event.preventDefault();
+    }
+
+    function endTimelinePinch(event) {
+      if (!timelinePinch.active) return;
+      if (event?.touches && event.touches.length >= 2) return;
+      timelinePinch.active = false;
+      timelinePinch.startDistance = 0;
+      els.timelineView.querySelector(".mobile-timeline")?.classList.remove("is-pinching");
+      if (timelinePinch.moved) {
+        toast(`1年の幅を${state.yearScale}pxにしました`);
+        window.setTimeout(() => {
+          timelinePinch.moved = false;
+        }, 0);
+      }
+    }
+
     function startTimelineDrag(event) {
       if (state.view !== "timeline" || isCompactViewport()) return;
       if (event.button !== 0) return;
@@ -2620,6 +2716,13 @@
     }
 
     function handleTimelineAction(event) {
+      if (timelinePinch.moved) {
+        event.preventDefault();
+        event.stopPropagation();
+        timelinePinch.moved = false;
+        return;
+      }
+
       if (timelineDrag.moved) {
         event.preventDefault();
         event.stopPropagation();
@@ -2861,7 +2964,7 @@
 
       els.timelineCanvas.style.width = "100%";
       els.timelineCanvas.style.height = "auto";
-      els.timelineCanvas.innerHTML = `<div class="mobile-timeline"><div class="mobile-timeline-track" style="width: ${Math.round(trackWidth)}px; min-height: ${Math.round(trackHeight)}px;">${guides}${cards}</div></div>`;
+      els.timelineCanvas.innerHTML = `<div class="mobile-timeline"><div class="mobile-zoom-hint">2本指ピンチで縮尺変更（1年=${state.yearScale}px）</div><div class="mobile-timeline-track" style="width: ${Math.round(trackWidth)}px; min-height: ${Math.round(trackHeight)}px;">${guides}${cards}</div></div>`;
     }
 
     function debounce(fn, wait = 120) {
