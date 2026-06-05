@@ -2843,7 +2843,7 @@
     function timelineYearScaleValue(value) {
       const parsed = Number(value);
       if (!Number.isFinite(parsed)) return 16;
-      return Math.max(4, Math.min(80, Math.round(parsed)));
+      return Math.max(4, Math.min(240, Math.round(parsed)));
     }
 
     function timelinePixelsPerYear() {
