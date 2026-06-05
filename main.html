@@ -1,0 +1,2105 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>歴史年表メーカー</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f6f1;
+      --surface: #ffffff;
+      --surface-2: #eef3ee;
+      --ink: #202421;
+      --muted: #68706a;
+      --line: #d8ded6;
+      --line-strong: #b9c3b7;
+      --teal: #0f766e;
+      --teal-soft: #d8f0ec;
+      --red: #b42318;
+      --amber: #b7791f;
+      --blue: #2563eb;
+      --green: #2f7d32;
+      --violet: #6d4fb3;
+      --rose: #c2415d;
+      --shadow: 0 12px 28px rgba(37, 45, 39, 0.12);
+      --radius: 8px;
+      --font: "Segoe UI", "Yu Gothic UI", "Meiryo", system-ui, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+    }
+
+    body {
+      margin: 0;
+      background:
+        linear-gradient(90deg, rgba(32, 36, 33, 0.035) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(32, 36, 33, 0.025) 1px, transparent 1px),
+        var(--bg);
+      background-size: 28px 28px;
+      color: var(--ink);
+      font-family: var(--font);
+      font-size: 15px;
+      letter-spacing: 0;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(255, 255, 255, 0.94);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(14px);
+    }
+
+    .topbar-inner {
+      display: grid;
+      grid-template-columns: minmax(210px, 320px) minmax(280px, 1fr) auto;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 18px;
+    }
+
+    .brand {
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      background: var(--surface-2);
+      color: var(--teal);
+      flex: 0 0 auto;
+    }
+
+    .title-input {
+      width: 100%;
+      min-width: 0;
+      border: 0;
+      border-bottom: 1px solid transparent;
+      background: transparent;
+      color: var(--ink);
+      font-weight: 700;
+      font-size: 18px;
+      outline: 0;
+      padding: 3px 0;
+    }
+
+    .title-input:focus {
+      border-bottom-color: var(--teal);
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .searchbox {
+      position: relative;
+      min-width: 0;
+    }
+
+    .searchbox .icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    .searchbox input {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--ink);
+      padding: 9px 12px 9px 40px;
+      outline: 0;
+    }
+
+    .searchbox input:focus,
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.16);
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .button,
+    .icon-button,
+    .tab-button,
+    .chip {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--ink);
+      transition: border-color 0.16s ease, background 0.16s ease, color 0.16s ease, transform 0.16s ease;
+    }
+
+    .button:hover,
+    .icon-button:hover,
+    .tab-button:hover,
+    .chip:hover {
+      border-color: var(--line-strong);
+      background: #f9fbf8;
+    }
+
+    .button:active,
+    .icon-button:active,
+    .tab-button:active,
+    .chip:active {
+      transform: translateY(1px);
+    }
+
+    .button {
+      min-height: 38px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px 12px;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    .button.primary {
+      border-color: var(--teal);
+      background: var(--teal);
+      color: #fff;
+    }
+
+    .button.primary:hover {
+      background: #0b665f;
+      border-color: #0b665f;
+    }
+
+    .button.danger {
+      color: var(--red);
+    }
+
+    .icon-button {
+      width: 38px;
+      height: 38px;
+      display: inline-grid;
+      place-items: center;
+      padding: 0;
+      flex: 0 0 auto;
+    }
+
+    .icon {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex: 0 0 auto;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 340px minmax(0, 1fr);
+      gap: 16px;
+      padding: 16px 18px 20px;
+      align-items: start;
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 0 1px 0 rgba(32, 36, 33, 0.04);
+    }
+
+    .editor {
+      position: sticky;
+      top: 78px;
+      max-height: calc(100vh - 96px);
+      overflow: auto;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 14px 14px 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 750;
+    }
+
+    .panel-note {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .event-form {
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .field label {
+      color: #36403a;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--ink);
+      outline: 0;
+      padding: 9px 10px;
+      min-height: 38px;
+    }
+
+    .field textarea {
+      min-height: 92px;
+      resize: vertical;
+      line-height: 1.55;
+    }
+
+    .field-hint {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .date-grid,
+    .two-grid {
+      display: grid;
+      grid-template-columns: 1fr 0.76fr;
+      gap: 10px;
+    }
+
+    .date-grid {
+      grid-template-columns: 1fr 0.58fr 0.58fr;
+    }
+
+    .form-actions {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 8px;
+      align-items: center;
+      padding-top: 2px;
+    }
+
+    .workspace {
+      display: grid;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .filters {
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .filter-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .chips,
+    .tabs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .chip,
+    .tab-button {
+      min-height: 34px;
+      padding: 7px 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    .chip[data-active="true"],
+    .tab-button[aria-selected="true"] {
+      border-color: var(--teal);
+      background: var(--teal-soft);
+      color: #063f3a;
+    }
+
+    .swatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      background: var(--chip-color, var(--muted));
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+      flex: 0 0 auto;
+    }
+
+    .importance-filter {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 230px;
+    }
+
+    .importance-filter label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    input[type="range"] {
+      accent-color: var(--teal);
+      width: 140px;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(120px, 1fr));
+      gap: 10px;
+    }
+
+    .metric {
+      min-height: 76px;
+      padding: 12px;
+      display: grid;
+      align-content: center;
+      gap: 4px;
+      border-left: 4px solid var(--metric-color, var(--teal));
+    }
+
+    .metric-value {
+      font-size: 24px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .main-view {
+      overflow: hidden;
+    }
+
+    .view-header {
+      min-height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .view-title {
+      display: grid;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .view-title strong {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .view-title span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .timeline-scroll {
+      overflow: auto;
+      background:
+        linear-gradient(90deg, rgba(15, 118, 110, 0.05) 1px, transparent 1px),
+        #fbfcfa;
+      background-size: 80px 100%;
+    }
+
+    .timeline-canvas {
+      position: relative;
+      min-height: 480px;
+      padding: 0 0 34px;
+    }
+
+    .axis-line {
+      position: absolute;
+      left: 44px;
+      right: 44px;
+      top: 96px;
+      height: 2px;
+      background: #24312c;
+      opacity: 0.76;
+    }
+
+    .axis-tick {
+      position: absolute;
+      top: 76px;
+      width: 1px;
+      height: calc(100% - 116px);
+      background: rgba(36, 49, 44, 0.16);
+    }
+
+    .axis-tick::before {
+      content: "";
+      position: absolute;
+      left: -4px;
+      top: 16px;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #24312c;
+    }
+
+    .axis-label {
+      position: absolute;
+      top: 42px;
+      transform: translateX(-50%);
+      color: #36403a;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .timeline-event {
+      position: absolute;
+      width: 228px;
+      min-height: 100px;
+      transform: translateX(-50%);
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--event-color, var(--teal));
+      border-radius: var(--radius);
+      background: #fff;
+      box-shadow: 0 7px 16px rgba(32, 36, 33, 0.08);
+      padding: 10px 10px 9px;
+      display: grid;
+      gap: 7px;
+      transition: box-shadow 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+    }
+
+    .timeline-event:hover,
+    .timeline-event[data-selected="true"] {
+      border-color: var(--event-color, var(--teal));
+      box-shadow: var(--shadow);
+      transform: translateX(-50%) translateY(-2px);
+      z-index: 3;
+    }
+
+    .event-date {
+      color: var(--event-color, var(--teal));
+      font-size: 12px;
+      font-weight: 850;
+      line-height: 1.2;
+    }
+
+    .event-title {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.35;
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    .event-meta {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .category-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      min-height: 22px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      padding: 2px 7px;
+      color: #303832;
+      font-weight: 700;
+    }
+
+    .importance {
+      color: var(--amber);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .event-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    .mini-button {
+      width: 30px;
+      height: 30px;
+      display: inline-grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: #36403a;
+      padding: 0;
+    }
+
+    .mini-button:hover {
+      border-color: var(--line-strong);
+      background: #f8faf7;
+    }
+
+    .mini-button.danger {
+      color: var(--red);
+    }
+
+    .pin {
+      position: absolute;
+      top: 91px;
+      width: 12px;
+      height: 12px;
+      transform: translateX(-50%) rotate(45deg);
+      border: 2px solid #fff;
+      background: var(--event-color, var(--teal));
+      box-shadow: 0 0 0 1px rgba(32, 36, 33, 0.25);
+      z-index: 2;
+    }
+
+    .list-view {
+      display: none;
+      overflow: auto;
+      background: #fff;
+    }
+
+    .data-table {
+      width: 100%;
+      min-width: 820px;
+      border-collapse: collapse;
+    }
+
+    .data-table th,
+    .data-table td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .data-table th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #f8faf7;
+      color: #465049;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .data-table td {
+      line-height: 1.45;
+    }
+
+    .table-title {
+      font-weight: 800;
+    }
+
+    .note-cell {
+      color: var(--muted);
+      max-width: 420px;
+    }
+
+    .row-actions {
+      display: flex;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+
+    .inspector {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(220px, 0.9fr);
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .inspector h3 {
+      margin: 0 0 7px;
+      font-size: 15px;
+    }
+
+    .inspector p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.65;
+      overflow-wrap: anywhere;
+    }
+
+    .detail-list {
+      display: grid;
+      gap: 7px;
+      color: #3c4540;
+      font-size: 13px;
+    }
+
+    .detail-item {
+      display: flex;
+      gap: 8px;
+      align-items: baseline;
+      min-width: 0;
+    }
+
+    .detail-label {
+      width: 58px;
+      color: var(--muted);
+      font-weight: 750;
+      flex: 0 0 auto;
+    }
+
+    .detail-value {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .source-link {
+      color: var(--blue);
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .source-link:hover {
+      text-decoration: underline;
+    }
+
+    .empty-state {
+      min-height: 320px;
+      display: grid;
+      place-items: center;
+      padding: 32px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .empty-state strong {
+      display: block;
+      color: var(--ink);
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 50;
+      max-width: min(420px, calc(100vw - 36px));
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      background: #fff;
+      box-shadow: var(--shadow);
+      color: var(--ink);
+      padding: 12px 14px;
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .toast[data-visible="true"] {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    @media (max-width: 1080px) {
+      .topbar-inner {
+        grid-template-columns: 1fr;
+      }
+
+      .toolbar {
+        justify-content: flex-start;
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .editor {
+        position: static;
+        max-height: none;
+      }
+
+      .metrics {
+        grid-template-columns: repeat(2, minmax(140px, 1fr));
+      }
+    }
+
+    @media (max-width: 680px) {
+      body {
+        font-size: 14px;
+      }
+
+      .topbar-inner,
+      .layout {
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+
+      .toolbar,
+      .chips,
+      .tabs,
+      .filter-row {
+        align-items: stretch;
+      }
+
+      .toolbar .button {
+        flex: 1 1 132px;
+      }
+
+      .date-grid,
+      .two-grid,
+      .form-actions,
+      .inspector,
+      .metrics {
+        grid-template-columns: 1fr;
+      }
+
+      .importance-filter {
+        min-width: 100%;
+      }
+
+      .timeline-event {
+        width: 208px;
+      }
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+
+      .topbar,
+      .editor,
+      .filters,
+      .event-actions,
+      .row-actions,
+      .toast {
+        display: none !important;
+      }
+
+      .layout {
+        display: block;
+        padding: 0;
+      }
+
+      .workspace {
+        gap: 0;
+      }
+
+      .panel {
+        border: 0;
+        box-shadow: none;
+      }
+
+      .timeline-scroll {
+        overflow: visible;
+      }
+
+      .timeline-canvas {
+        transform-origin: top left;
+        transform: scale(0.78);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <div class="brand-row">
+            <div class="brand-mark" aria-hidden="true">
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M3 12h18"></path>
+                <path d="M7 12v7"></path>
+                <path d="M17 12v7"></path>
+                <path d="M5 5h14"></path>
+                <path d="M7 5v4"></path>
+                <path d="M17 5v4"></path>
+              </svg>
+            </div>
+            <input id="projectTitle" class="title-input" type="text" maxlength="48" aria-label="年表名">
+          </div>
+          <div id="saveState" class="subtitle">自動保存されています</div>
+        </div>
+
+        <div class="searchbox">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m21 21-4.34-4.34"></path>
+            <circle cx="11" cy="11" r="8"></circle>
+          </svg>
+          <input id="searchInput" type="search" placeholder="人物・事件・地域・メモを検索" autocomplete="off">
+        </div>
+
+        <div class="toolbar" aria-label="ファイル操作">
+          <button id="importBtn" class="icon-button" type="button" title="JSONを読み込む" aria-label="JSONを読み込む">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <path d="M17 8 12 3 7 8"></path>
+              <path d="M12 3v12"></path>
+            </svg>
+          </button>
+          <button id="exportJsonBtn" class="icon-button" type="button" title="JSONを書き出す" aria-label="JSONを書き出す">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <path d="M7 10 12 15 17 10"></path>
+              <path d="M12 15V3"></path>
+            </svg>
+          </button>
+          <button id="exportCsvBtn" class="icon-button" type="button" title="CSVを書き出す" aria-label="CSVを書き出す">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <path d="M14 2v6h6"></path>
+              <path d="M8 13h8"></path>
+              <path d="M8 17h5"></path>
+            </svg>
+          </button>
+          <button id="printBtn" class="icon-button" type="button" title="印刷する" aria-label="印刷する">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path d="M6 9V2h12v7"></path>
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+              <path d="M6 14h12v8H6z"></path>
+            </svg>
+          </button>
+          <input id="fileInput" type="file" accept="application/json,.json" hidden>
+        </div>
+      </div>
+    </header>
+
+    <main class="layout">
+      <aside class="panel editor" aria-label="事件の編集">
+        <div class="panel-header">
+          <div>
+            <h1 class="panel-title" id="formTitle">事件を追加</h1>
+            <div class="panel-note">紀元前は負の年で入力</div>
+          </div>
+          <button id="resetFormBtn" class="icon-button" type="button" title="フォームを空にする" aria-label="フォームを空にする">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path d="M3 12a9 9 0 1 0 3-6.7"></path>
+              <path d="M3 3v6h6"></path>
+            </svg>
+          </button>
+        </div>
+
+        <form id="eventForm" class="event-form">
+          <div class="date-grid">
+            <div class="field">
+              <label for="yearInput">年</label>
+              <input id="yearInput" name="year" type="number" step="1" required placeholder="-221">
+            </div>
+            <div class="field">
+              <label for="monthInput">月</label>
+              <input id="monthInput" name="month" type="number" min="1" max="12" step="1" placeholder="3">
+            </div>
+            <div class="field">
+              <label for="dayInput">日</label>
+              <input id="dayInput" name="day" type="number" min="1" max="31" step="1" placeholder="15">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="titleEventInput">タイトル</label>
+            <input id="titleEventInput" name="title" type="text" maxlength="80" required placeholder="例: 秦が中国を統一">
+          </div>
+
+          <div class="two-grid">
+            <div class="field">
+              <label for="categoryInput">分類</label>
+              <select id="categoryInput" name="category"></select>
+            </div>
+            <div class="field">
+              <label for="importanceInput">重要度</label>
+              <select id="importanceInput" name="importance">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3" selected>3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="regionInput">地域</label>
+            <input id="regionInput" name="region" type="text" maxlength="48" placeholder="例: 東アジア / 日本 / ヨーロッパ">
+          </div>
+
+          <div class="field">
+            <label for="noteInput">メモ</label>
+            <textarea id="noteInput" name="note" maxlength="500" placeholder="背景、結果、関連する人物など"></textarea>
+          </div>
+
+          <div class="field">
+            <label for="sourceInput">出典URL</label>
+            <input id="sourceInput" name="source" type="url" maxlength="240" placeholder="https://...">
+            <div class="field-hint">JSONで保存すると、入力した事件を別の日にも復元できます。</div>
+          </div>
+
+          <div class="form-actions">
+            <button id="submitBtn" class="button primary" type="submit">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 5v14"></path>
+                <path d="M5 12h14"></path>
+              </svg>
+              追加
+            </button>
+            <button id="duplicateBtn" class="icon-button" type="button" title="選択中の事件を複製" aria-label="選択中の事件を複製">
+              <svg class="icon" viewBox="0 0 24 24">
+                <rect x="8" y="8" width="12" height="12" rx="2"></rect>
+                <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path>
+              </svg>
+            </button>
+            <button id="deleteSelectedBtn" class="icon-button" type="button" title="選択中の事件を削除" aria-label="選択中の事件を削除">
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M3 6h18"></path>
+                <path d="M8 6V4h8v2"></path>
+                <path d="M19 6 18 20H6L5 6"></path>
+                <path d="M10 11v6"></path>
+                <path d="M14 11v6"></path>
+              </svg>
+            </button>
+          </div>
+        </form>
+      </aside>
+
+      <section class="workspace">
+        <section class="panel filters" aria-label="絞り込み">
+          <div class="filter-row">
+            <div class="tabs" role="tablist" aria-label="表示切替">
+              <button class="tab-button" type="button" role="tab" aria-selected="true" data-view="timeline">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M3 12h18"></path>
+                  <path d="M7 12v7"></path>
+                  <path d="M12 5v7"></path>
+                  <path d="M17 12v7"></path>
+                </svg>
+                年表
+              </button>
+              <button class="tab-button" type="button" role="tab" aria-selected="false" data-view="list">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M8 6h13"></path>
+                  <path d="M8 12h13"></path>
+                  <path d="M8 18h13"></path>
+                  <path d="M3 6h.01"></path>
+                  <path d="M3 12h.01"></path>
+                  <path d="M3 18h.01"></path>
+                </svg>
+                一覧
+              </button>
+            </div>
+            <div class="importance-filter">
+              <label for="importanceRange">重要度</label>
+              <input id="importanceRange" type="range" min="1" max="5" value="1" step="1">
+              <strong id="importanceLabel">1以上</strong>
+            </div>
+          </div>
+          <div id="categoryChips" class="chips" aria-label="分類フィルター"></div>
+          <div class="filter-row">
+            <button id="sampleBtn" class="button" type="button">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 19.5V5a2 2 0 0 1 2-2h13v18H6a2 2 0 0 1-2-1.5z"></path>
+                <path d="M8 7h7"></path>
+                <path d="M8 11h7"></path>
+              </svg>
+              サンプル復元
+            </button>
+            <button id="clearBtn" class="button danger" type="button">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 6h18"></path>
+                <path d="M8 6V4h8v2"></path>
+                <path d="M19 6 18 20H6L5 6"></path>
+              </svg>
+              全削除
+            </button>
+          </div>
+        </section>
+
+        <section class="metrics" aria-label="集計">
+          <div class="panel metric" style="--metric-color: var(--teal)">
+            <div id="countMetric" class="metric-value">0</div>
+            <div class="metric-label">表示中の事件</div>
+          </div>
+          <div class="panel metric" style="--metric-color: var(--amber)">
+            <div id="spanMetric" class="metric-value">0年</div>
+            <div class="metric-label">時代の幅</div>
+          </div>
+          <div class="panel metric" style="--metric-color: var(--blue)">
+            <div id="categoryMetric" class="metric-value">0</div>
+            <div class="metric-label">分類数</div>
+          </div>
+          <div class="panel metric" style="--metric-color: var(--rose)">
+            <div id="selectedMetric" class="metric-value">未選択</div>
+            <div class="metric-label">選択中</div>
+          </div>
+        </section>
+
+        <section class="panel main-view">
+          <div class="view-header">
+            <div class="view-title">
+              <strong id="viewHeading">年表ビュー</strong>
+              <span id="viewSubheading">年代順に自動配置</span>
+            </div>
+            <div class="panel-note" id="rangeText"></div>
+          </div>
+
+          <div id="timelineView" class="timeline-scroll">
+            <div id="timelineCanvas" class="timeline-canvas"></div>
+          </div>
+
+          <div id="listView" class="list-view">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>年代</th>
+                  <th>タイトル</th>
+                  <th>分類</th>
+                  <th>地域</th>
+                  <th>重要度</th>
+                  <th>メモ</th>
+                  <th aria-label="操作"></th>
+                </tr>
+              </thead>
+              <tbody id="tableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel inspector" aria-live="polite">
+          <div>
+            <h3 id="detailTitle">事件を選択</h3>
+            <p id="detailNote">年表または一覧の事件を選ぶと、詳細をここで確認できます。</p>
+          </div>
+          <div id="detailMeta" class="detail-list"></div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const STORAGE_KEY = "history-timeline-maker:v1";
+    const TITLE_KEY = "history-timeline-maker:title";
+
+    const categories = [
+      { name: "政治", color: "#0f766e" },
+      { name: "文化", color: "#b7791f" },
+      { name: "科学", color: "#2563eb" },
+      { name: "社会", color: "#2f7d32" },
+      { name: "外交", color: "#7c3aed" },
+      { name: "戦争", color: "#b42318" },
+      { name: "人物", color: "#6d4fb3" },
+      { name: "その他", color: "#68706a" }
+    ];
+
+    const sampleEvents = [
+      {
+        id: "sample-1",
+        year: -221,
+        month: "",
+        day: "",
+        title: "秦が中国を統一",
+        category: "政治",
+        region: "東アジア",
+        importance: 5,
+        note: "始皇帝のもとで度量衡や文字の統一が進み、中央集権的な国家運営が強まった。",
+        source: ""
+      },
+      {
+        id: "sample-2",
+        year: 57,
+        month: "",
+        day: "",
+        title: "倭の奴国王が金印を受ける",
+        category: "外交",
+        region: "日本",
+        importance: 3,
+        note: "後漢書東夷伝に見える出来事。古代日本と大陸の関係を考える手がかりになる。",
+        source: ""
+      },
+      {
+        id: "sample-3",
+        year: 538,
+        month: "",
+        day: "",
+        title: "仏教伝来",
+        category: "文化",
+        region: "日本",
+        importance: 4,
+        note: "伝来年には諸説があるが、古墳時代から飛鳥時代への文化変化を整理する軸になる。",
+        source: ""
+      },
+      {
+        id: "sample-4",
+        year: 710,
+        month: "",
+        day: "",
+        title: "平城京に遷都",
+        category: "政治",
+        region: "日本",
+        importance: 4,
+        note: "奈良時代の開始を示す代表的な出来事。",
+        source: ""
+      },
+      {
+        id: "sample-5",
+        year: 1185,
+        month: "",
+        day: "",
+        title: "鎌倉幕府が成立",
+        category: "政治",
+        region: "日本",
+        importance: 5,
+        note: "守護・地頭の設置などを基準にした年。武家政権の流れを追う入口になる。",
+        source: ""
+      },
+      {
+        id: "sample-6",
+        year: 1492,
+        month: "",
+        day: "",
+        title: "コロンブスが大西洋を横断",
+        category: "社会",
+        region: "大西洋世界",
+        importance: 5,
+        note: "ヨーロッパ、アメリカ大陸、アフリカを結ぶ世界史の構造変化につながった。",
+        source: ""
+      },
+      {
+        id: "sample-7",
+        year: 1603,
+        month: "",
+        day: "",
+        title: "江戸幕府が開かれる",
+        category: "政治",
+        region: "日本",
+        importance: 5,
+        note: "徳川家康が征夷大将軍となり、江戸を中心とする長期政権が始まった。",
+        source: ""
+      },
+      {
+        id: "sample-8",
+        year: 1776,
+        month: 7,
+        day: 4,
+        title: "アメリカ独立宣言",
+        category: "政治",
+        region: "北アメリカ",
+        importance: 4,
+        note: "近代国家、権利思想、革命の連鎖を整理するうえで重要。",
+        source: ""
+      },
+      {
+        id: "sample-9",
+        year: 1789,
+        month: 7,
+        day: 14,
+        title: "フランス革命が始まる",
+        category: "社会",
+        region: "ヨーロッパ",
+        importance: 5,
+        note: "身分制社会の変化、国民主権、人権宣言などにつながる。",
+        source: ""
+      },
+      {
+        id: "sample-10",
+        year: 1868,
+        month: "",
+        day: "",
+        title: "明治維新",
+        category: "政治",
+        region: "日本",
+        importance: 5,
+        note: "近代国家形成、殖産興業、制度改革などの始点として扱いやすい。",
+        source: ""
+      },
+      {
+        id: "sample-11",
+        year: 1945,
+        month: 8,
+        day: 15,
+        title: "第二次世界大戦が終結",
+        category: "戦争",
+        region: "世界",
+        importance: 5,
+        note: "戦後秩序、国際連合、冷戦の展開につながる大きな転換点。",
+        source: ""
+      },
+      {
+        id: "sample-12",
+        year: 1969,
+        month: 7,
+        day: 20,
+        title: "アポロ11号が月面着陸",
+        category: "科学",
+        region: "宇宙",
+        importance: 4,
+        note: "冷戦期の科学技術競争と人類の宇宙探査を結びつけて見られる。",
+        source: ""
+      },
+      {
+        id: "sample-13",
+        year: 1989,
+        month: 11,
+        day: 9,
+        title: "ベルリンの壁が開放",
+        category: "社会",
+        region: "ヨーロッパ",
+        importance: 5,
+        note: "東西冷戦の終結を象徴する出来事。",
+        source: ""
+      }
+    ];
+
+    const state = {
+      events: [],
+      activeCategory: "すべて",
+      minImportance: 1,
+      query: "",
+      view: "timeline",
+      selectedId: null
+    };
+
+    const els = {
+      projectTitle: document.getElementById("projectTitle"),
+      saveState: document.getElementById("saveState"),
+      searchInput: document.getElementById("searchInput"),
+      importBtn: document.getElementById("importBtn"),
+      exportJsonBtn: document.getElementById("exportJsonBtn"),
+      exportCsvBtn: document.getElementById("exportCsvBtn"),
+      printBtn: document.getElementById("printBtn"),
+      fileInput: document.getElementById("fileInput"),
+      form: document.getElementById("eventForm"),
+      formTitle: document.getElementById("formTitle"),
+      submitBtn: document.getElementById("submitBtn"),
+      resetFormBtn: document.getElementById("resetFormBtn"),
+      duplicateBtn: document.getElementById("duplicateBtn"),
+      deleteSelectedBtn: document.getElementById("deleteSelectedBtn"),
+      yearInput: document.getElementById("yearInput"),
+      monthInput: document.getElementById("monthInput"),
+      dayInput: document.getElementById("dayInput"),
+      titleEventInput: document.getElementById("titleEventInput"),
+      categoryInput: document.getElementById("categoryInput"),
+      importanceInput: document.getElementById("importanceInput"),
+      regionInput: document.getElementById("regionInput"),
+      noteInput: document.getElementById("noteInput"),
+      sourceInput: document.getElementById("sourceInput"),
+      categoryChips: document.getElementById("categoryChips"),
+      importanceRange: document.getElementById("importanceRange"),
+      importanceLabel: document.getElementById("importanceLabel"),
+      sampleBtn: document.getElementById("sampleBtn"),
+      clearBtn: document.getElementById("clearBtn"),
+      countMetric: document.getElementById("countMetric"),
+      spanMetric: document.getElementById("spanMetric"),
+      categoryMetric: document.getElementById("categoryMetric"),
+      selectedMetric: document.getElementById("selectedMetric"),
+      viewHeading: document.getElementById("viewHeading"),
+      viewSubheading: document.getElementById("viewSubheading"),
+      rangeText: document.getElementById("rangeText"),
+      timelineView: document.getElementById("timelineView"),
+      timelineCanvas: document.getElementById("timelineCanvas"),
+      listView: document.getElementById("listView"),
+      tableBody: document.getElementById("tableBody"),
+      detailTitle: document.getElementById("detailTitle"),
+      detailNote: document.getElementById("detailNote"),
+      detailMeta: document.getElementById("detailMeta"),
+      toast: document.getElementById("toast")
+    };
+
+    const iconSvg = {
+      edit: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>',
+      trash: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M19 6 18 20H6L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>',
+      locate: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v4"></path><path d="M12 18v4"></path><path d="M2 12h4"></path><path d="M18 12h4"></path><circle cx="12" cy="12" r="4"></circle></svg>'
+    };
+
+    function boot() {
+      populateCategorySelect();
+      load();
+      renderAll();
+      bindEvents();
+    }
+
+    function populateCategorySelect() {
+      els.categoryInput.innerHTML = categories
+        .map((category) => `<option value="${escapeHtml(category.name)}">${escapeHtml(category.name)}</option>`)
+        .join("");
+    }
+
+    function load() {
+      const storedTitle = localStorage.getItem(TITLE_KEY);
+      els.projectTitle.value = storedTitle || "歴史年表メーカー";
+
+      try {
+        const storedEvents = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+        state.events = Array.isArray(storedEvents) && storedEvents.length
+          ? normalizeEvents(storedEvents)
+          : cloneEvents(sampleEvents);
+      } catch {
+        state.events = cloneEvents(sampleEvents);
+      }
+    }
+
+    function bindEvents() {
+      els.projectTitle.addEventListener("input", () => {
+        localStorage.setItem(TITLE_KEY, els.projectTitle.value.trim() || "歴史年表メーカー");
+        setSaveState("年表名を保存しました");
+      });
+
+      els.searchInput.addEventListener("input", () => {
+        state.query = els.searchInput.value.trim().toLowerCase();
+        renderAll();
+      });
+
+      els.importBtn.addEventListener("click", () => els.fileInput.click());
+      els.fileInput.addEventListener("change", importJson);
+      els.exportJsonBtn.addEventListener("click", exportJson);
+      els.exportCsvBtn.addEventListener("click", exportCsv);
+      els.printBtn.addEventListener("click", () => window.print());
+
+      els.form.addEventListener("submit", saveFormEvent);
+      els.resetFormBtn.addEventListener("click", () => resetForm(true));
+      els.duplicateBtn.addEventListener("click", duplicateSelected);
+      els.deleteSelectedBtn.addEventListener("click", deleteSelected);
+
+      els.categoryChips.addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-category]");
+        if (!button) return;
+        state.activeCategory = button.dataset.category;
+        renderAll();
+      });
+
+      els.importanceRange.addEventListener("input", () => {
+        state.minImportance = Number(els.importanceRange.value);
+        renderAll();
+      });
+
+      document.querySelectorAll(".tab-button").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.view = button.dataset.view;
+          renderAll();
+        });
+      });
+
+      els.timelineCanvas.addEventListener("click", handleTimelineAction);
+      els.tableBody.addEventListener("click", handleTableAction);
+
+      els.sampleBtn.addEventListener("click", () => {
+        if (!confirm("現在の年表をサンプルデータに置き換えますか？")) return;
+        state.events = cloneEvents(sampleEvents);
+        state.selectedId = state.events[0]?.id || null;
+        resetForm(false);
+        persist();
+        renderAll();
+        toast("サンプル年表を復元しました");
+      });
+
+      els.clearBtn.addEventListener("click", () => {
+        if (!state.events.length) return;
+        if (!confirm("すべての事件を削除しますか？")) return;
+        state.events = [];
+        state.selectedId = null;
+        resetForm(false);
+        persist();
+        renderAll();
+        toast("すべて削除しました");
+      });
+    }
+
+    function saveFormEvent(event) {
+      event.preventDefault();
+      const payload = readForm();
+      if (!payload) return;
+
+      const editingId = els.form.dataset.editingId;
+      if (editingId) {
+        state.events = state.events.map((item) => item.id === editingId ? { ...payload, id: editingId } : item);
+        state.selectedId = editingId;
+        toast("事件を更新しました");
+      } else {
+        const newEvent = { ...payload, id: makeId() };
+        state.events.push(newEvent);
+        state.selectedId = newEvent.id;
+        toast("事件を追加しました");
+      }
+
+      persist();
+      resetForm(false);
+      renderAll();
+    }
+
+    function readForm() {
+      const year = Number(els.yearInput.value);
+      const month = els.monthInput.value === "" ? "" : Number(els.monthInput.value);
+      const day = els.dayInput.value === "" ? "" : Number(els.dayInput.value);
+      const title = els.titleEventInput.value.trim();
+
+      if (!Number.isInteger(year)) {
+        toast("年は整数で入力してください");
+        els.yearInput.focus();
+        return null;
+      }
+
+      if (year === 0) {
+        toast("歴史年表では1年または-1年のように入力すると扱いやすいです");
+        els.yearInput.focus();
+        return null;
+      }
+
+      if (month !== "" && (!Number.isInteger(month) || month < 1 || month > 12)) {
+        toast("月は1から12で入力してください");
+        els.monthInput.focus();
+        return null;
+      }
+
+      if (day !== "" && (!Number.isInteger(day) || day < 1 || day > 31)) {
+        toast("日は1から31で入力してください");
+        els.dayInput.focus();
+        return null;
+      }
+
+      if (!title) {
+        toast("タイトルを入力してください");
+        els.titleEventInput.focus();
+        return null;
+      }
+
+      return {
+        year,
+        month,
+        day,
+        title,
+        category: els.categoryInput.value,
+        region: els.regionInput.value.trim(),
+        importance: Number(els.importanceInput.value),
+        note: els.noteInput.value.trim(),
+        source: els.sourceInput.value.trim()
+      };
+    }
+
+    function resetForm(clearSelection) {
+      els.form.reset();
+      els.form.dataset.editingId = "";
+      els.formTitle.textContent = "事件を追加";
+      els.submitBtn.innerHTML = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>追加';
+      els.importanceInput.value = "3";
+      if (clearSelection) {
+        state.selectedId = null;
+        renderAll();
+      }
+    }
+
+    function fillForm(item) {
+      els.yearInput.value = item.year;
+      els.monthInput.value = item.month || "";
+      els.dayInput.value = item.day || "";
+      els.titleEventInput.value = item.title;
+      els.categoryInput.value = knownCategory(item.category).name;
+      els.importanceInput.value = item.importance || 3;
+      els.regionInput.value = item.region || "";
+      els.noteInput.value = item.note || "";
+      els.sourceInput.value = item.source || "";
+      els.form.dataset.editingId = item.id;
+      els.formTitle.textContent = "事件を編集";
+      els.submitBtn.innerHTML = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>更新';
+      els.titleEventInput.focus();
+    }
+
+    function duplicateSelected() {
+      const item = getSelectedEvent();
+      if (!item) {
+        toast("複製する事件を選択してください");
+        return;
+      }
+
+      const copy = {
+        ...item,
+        id: makeId(),
+        title: `${item.title} のコピー`
+      };
+      state.events.push(copy);
+      state.selectedId = copy.id;
+      persist();
+      fillForm(copy);
+      renderAll();
+      toast("事件を複製しました");
+    }
+
+    function deleteSelected() {
+      const item = getSelectedEvent();
+      if (!item) {
+        toast("削除する事件を選択してください");
+        return;
+      }
+      removeEvent(item.id);
+    }
+
+    function handleTimelineAction(event) {
+      const button = event.target.closest("button[data-action]");
+      if (button) {
+        const id = button.dataset.id;
+        const action = button.dataset.action;
+        if (action === "edit") {
+          selectEvent(id);
+          fillForm(findEvent(id));
+        }
+        if (action === "delete") {
+          removeEvent(id);
+        }
+        return;
+      }
+
+      const card = event.target.closest("[data-event-id]");
+      if (!card) return;
+      selectEvent(card.dataset.eventId);
+    }
+
+    function handleTableAction(event) {
+      const button = event.target.closest("button[data-action]");
+      if (!button) return;
+      const id = button.dataset.id;
+      const action = button.dataset.action;
+      if (action === "select") selectEvent(id);
+      if (action === "edit") {
+        selectEvent(id);
+        fillForm(findEvent(id));
+      }
+      if (action === "delete") removeEvent(id);
+    }
+
+    function selectEvent(id) {
+      state.selectedId = id;
+      renderAll();
+    }
+
+    function removeEvent(id) {
+      const item = findEvent(id);
+      if (!item) return;
+      if (!confirm(`「${item.title}」を削除しますか？`)) return;
+      state.events = state.events.filter((event) => event.id !== id);
+      if (state.selectedId === id) state.selectedId = state.events[0]?.id || null;
+      if (els.form.dataset.editingId === id) resetForm(false);
+      persist();
+      renderAll();
+      toast("事件を削除しました");
+    }
+
+    function renderAll() {
+      const filtered = getFilteredEvents();
+      renderCategoryChips();
+      renderTabs();
+      renderMetrics(filtered);
+      renderTimeline(filtered);
+      renderList(filtered);
+      renderInspector();
+      els.importanceRange.value = state.minImportance;
+      els.importanceLabel.textContent = `${state.minImportance}以上`;
+      els.timelineView.hidden = state.view !== "timeline";
+      els.listView.style.display = state.view === "list" ? "block" : "none";
+      els.viewHeading.textContent = state.view === "timeline" ? "年表ビュー" : "一覧ビュー";
+      els.viewSubheading.textContent = state.view === "timeline" ? "年代順に自動配置" : "編集しやすい表形式";
+    }
+
+    function renderCategoryChips() {
+      const counts = categoryCounts();
+      const chipData = [{ name: "すべて", color: "#202421", count: state.events.length }, ...categories.map((category) => ({
+        ...category,
+        count: counts.get(category.name) || 0
+      }))];
+
+      els.categoryChips.innerHTML = chipData.map((category) => `
+        <button class="chip" type="button" data-category="${escapeHtml(category.name)}" data-active="${state.activeCategory === category.name}" style="--chip-color: ${category.color}">
+          <span class="swatch" aria-hidden="true"></span>
+          ${escapeHtml(category.name)}
+          <span class="panel-note">${category.count}</span>
+        </button>
+      `).join("");
+    }
+
+    function renderTabs() {
+      document.querySelectorAll(".tab-button").forEach((button) => {
+        button.setAttribute("aria-selected", String(button.dataset.view === state.view));
+      });
+    }
+
+    function renderMetrics(filtered) {
+      const years = filtered.map((event) => event.year);
+      const minYear = years.length ? Math.min(...years) : 0;
+      const maxYear = years.length ? Math.max(...years) : 0;
+      const span = years.length ? Math.abs(maxYear - minYear) : 0;
+      const categoriesShown = new Set(filtered.map((event) => knownCategory(event.category).name)).size;
+      const selected = getSelectedEvent();
+
+      els.countMetric.textContent = String(filtered.length);
+      els.spanMetric.textContent = `${span.toLocaleString("ja-JP")}年`;
+      els.categoryMetric.textContent = String(categoriesShown);
+      els.selectedMetric.textContent = selected ? formatDate(selected) : "未選択";
+      els.rangeText.textContent = filtered.length ? `${formatYear(minYear)} - ${formatYear(maxYear)}` : "";
+    }
+
+    function renderTimeline(filtered) {
+      if (!filtered.length) {
+        els.timelineCanvas.style.width = "100%";
+        els.timelineCanvas.style.height = "360px";
+        els.timelineCanvas.innerHTML = `
+          <div class="empty-state">
+            <div>
+              <strong>表示できる事件がありません</strong>
+              <span>検索条件をゆるめるか、左のフォームから事件を追加してください。</span>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      const rawMin = Math.min(...filtered.map((event) => event.year));
+      const rawMax = Math.max(...filtered.map((event) => event.year));
+      const minYear = rawMin === rawMax ? rawMin - 1 : rawMin;
+      const maxYear = rawMin === rawMax ? rawMax + 1 : rawMax;
+      const range = maxYear - minYear || 1;
+      const width = Math.max(1080, Math.min(5600, filtered.length * 220 + Math.min(range * 4, 2400)));
+      const padding = 76;
+      const usable = width - padding * 2;
+      const lanes = [];
+      const cardWidth = 228;
+      const laneHeight = 132;
+      const baseTop = 132;
+
+      const positioned = filtered.map((event) => {
+        const x = padding + ((event.year - minYear) / range) * usable;
+        let lane = lanes.findIndex((lastX) => x - lastX > cardWidth + 22);
+        if (lane === -1) {
+          lane = lanes.length;
+          lanes.push(-Infinity);
+        }
+        lanes[lane] = x;
+        return { event, x, lane };
+      });
+
+      const height = Math.max(430, baseTop + (lanes.length || 1) * laneHeight + 44);
+      const ticks = buildTicks(minYear, maxYear).map((year) => {
+        const x = padding + ((year - minYear) / range) * usable;
+        return `
+          <div class="axis-tick" style="left: ${x}px;"></div>
+          <div class="axis-label" style="left: ${x}px;">${escapeHtml(formatYear(year))}</div>
+        `;
+      }).join("");
+
+      const cards = positioned.map(({ event, x, lane }) => {
+        const category = knownCategory(event.category);
+        const y = baseTop + lane * laneHeight;
+        return `
+          <div class="pin" style="left: ${x}px; --event-color: ${category.color};"></div>
+          <article class="timeline-event" data-event-id="${escapeHtml(event.id)}" data-selected="${state.selectedId === event.id}" style="left: ${x}px; top: ${y}px; --event-color: ${category.color};">
+            <div class="event-date">${escapeHtml(formatDate(event))}</div>
+            <h2 class="event-title">${escapeHtml(event.title)}</h2>
+            <div class="event-meta">
+              <span class="category-badge"><span class="swatch" style="--chip-color: ${category.color}" aria-hidden="true"></span>${escapeHtml(category.name)}</span>
+              <span>${escapeHtml(event.region || "地域未設定")}</span>
+              <span class="importance">${importanceDots(event.importance)}</span>
+            </div>
+            <div class="event-actions" aria-label="事件操作">
+              <button class="mini-button" type="button" data-action="edit" data-id="${escapeHtml(event.id)}" title="編集" aria-label="編集">${iconSvg.edit}</button>
+              <button class="mini-button danger" type="button" data-action="delete" data-id="${escapeHtml(event.id)}" title="削除" aria-label="削除">${iconSvg.trash}</button>
+            </div>
+          </article>
+        `;
+      }).join("");
+
+      els.timelineCanvas.style.width = `${width}px`;
+      els.timelineCanvas.style.height = `${height}px`;
+      els.timelineCanvas.innerHTML = `<div class="axis-line"></div>${ticks}${cards}`;
+    }
+
+    function renderList(filtered) {
+      if (!filtered.length) {
+        els.tableBody.innerHTML = `
+          <tr>
+            <td colspan="7">
+              <div class="empty-state">
+                <div>
+                  <strong>一覧に表示できる事件がありません</strong>
+                  <span>検索条件を変更してください。</span>
+                </div>
+              </div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      els.tableBody.innerHTML = filtered.map((event) => {
+        const category = knownCategory(event.category);
+        return `
+          <tr data-event-id="${escapeHtml(event.id)}">
+            <td><strong>${escapeHtml(formatDate(event))}</strong></td>
+            <td><div class="table-title">${escapeHtml(event.title)}</div></td>
+            <td><span class="category-badge"><span class="swatch" style="--chip-color: ${category.color}" aria-hidden="true"></span>${escapeHtml(category.name)}</span></td>
+            <td>${escapeHtml(event.region || "")}</td>
+            <td><span class="importance">${importanceDots(event.importance)}</span></td>
+            <td class="note-cell">${escapeHtml(event.note || "")}</td>
+            <td>
+              <div class="row-actions">
+                <button class="mini-button" type="button" data-action="select" data-id="${escapeHtml(event.id)}" title="選択" aria-label="選択">${iconSvg.locate}</button>
+                <button class="mini-button" type="button" data-action="edit" data-id="${escapeHtml(event.id)}" title="編集" aria-label="編集">${iconSvg.edit}</button>
+                <button class="mini-button danger" type="button" data-action="delete" data-id="${escapeHtml(event.id)}" title="削除" aria-label="削除">${iconSvg.trash}</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function renderInspector() {
+      const item = getSelectedEvent();
+      if (!item) {
+        els.detailTitle.textContent = "事件を選択";
+        els.detailNote.textContent = "年表または一覧の事件を選ぶと、詳細をここで確認できます。";
+        els.detailMeta.innerHTML = "";
+        return;
+      }
+
+      const category = knownCategory(item.category);
+      els.detailTitle.textContent = item.title;
+      els.detailNote.textContent = item.note || "メモは未入力です。";
+      els.detailMeta.innerHTML = `
+        <div class="detail-item"><span class="detail-label">年代</span><span class="detail-value">${escapeHtml(formatDate(item))}</span></div>
+        <div class="detail-item"><span class="detail-label">分類</span><span class="detail-value"><span class="category-badge"><span class="swatch" style="--chip-color: ${category.color}" aria-hidden="true"></span>${escapeHtml(category.name)}</span></span></div>
+        <div class="detail-item"><span class="detail-label">地域</span><span class="detail-value">${escapeHtml(item.region || "未設定")}</span></div>
+        <div class="detail-item"><span class="detail-label">重要度</span><span class="detail-value"><span class="importance">${importanceDots(item.importance)}</span></span></div>
+        <div class="detail-item"><span class="detail-label">出典</span><span class="detail-value">${renderSource(item.source)}</span></div>
+      `;
+    }
+
+    function getFilteredEvents() {
+      const query = state.query;
+      return [...state.events]
+        .filter((event) => state.activeCategory === "すべて" || knownCategory(event.category).name === state.activeCategory)
+        .filter((event) => Number(event.importance || 1) >= state.minImportance)
+        .filter((event) => {
+          if (!query) return true;
+          const haystack = [
+            event.title,
+            event.region,
+            event.note,
+            event.source,
+            knownCategory(event.category).name,
+            formatDate(event)
+          ].join(" ").toLowerCase();
+          return haystack.includes(query);
+        })
+        .sort(compareEvents);
+    }
+
+    function compareEvents(a, b) {
+      return a.year - b.year
+        || Number(a.month || 0) - Number(b.month || 0)
+        || Number(a.day || 0) - Number(b.day || 0)
+        || a.title.localeCompare(b.title, "ja");
+    }
+
+    function buildTicks(minYear, maxYear) {
+      const range = Math.max(1, maxYear - minYear);
+      const rough = range / 7;
+      const power = Math.pow(10, Math.floor(Math.log10(rough)));
+      const multiples = [1, 2, 5, 10];
+      const step = multiples.map((value) => value * power).find((value) => value >= rough) || 10 * power;
+      const ticks = [];
+      let cursor = Math.ceil(minYear / step) * step;
+
+      if (cursor > minYear) ticks.push(minYear);
+      for (; cursor <= maxYear; cursor += step) {
+        ticks.push(Math.round(cursor));
+      }
+      if (ticks[ticks.length - 1] !== maxYear) ticks.push(maxYear);
+      return [...new Set(ticks)].slice(0, 12);
+    }
+
+    function categoryCounts() {
+      const counts = new Map();
+      state.events.forEach((event) => {
+        const name = knownCategory(event.category).name;
+        counts.set(name, (counts.get(name) || 0) + 1);
+      });
+      return counts;
+    }
+
+    function knownCategory(name) {
+      return categories.find((category) => category.name === name) || categories[categories.length - 1];
+    }
+
+    function formatYear(year) {
+      if (year < 0) return `紀元前${Math.abs(year).toLocaleString("ja-JP")}年`;
+      return `${year.toLocaleString("ja-JP")}年`;
+    }
+
+    function formatDate(event) {
+      const base = formatYear(Number(event.year));
+      const month = event.month ? `${Number(event.month)}月` : "";
+      const day = event.day ? `${Number(event.day)}日` : "";
+      return `${base}${month}${day}`;
+    }
+
+    function importanceDots(value) {
+      const count = Math.max(1, Math.min(5, Number(value) || 1));
+      return "●".repeat(count) + "○".repeat(5 - count);
+    }
+
+    function renderSource(source) {
+      if (!source) return "未設定";
+      const safeText = escapeHtml(source);
+      const href = safeHttpUrl(source);
+      if (!href) return safeText;
+      return `<a class="source-link" href="${escapeHtml(href)}" target="_blank" rel="noreferrer">${safeText}</a>`;
+    }
+
+    function safeHttpUrl(source) {
+      try {
+        const url = new URL(source);
+        return ["http:", "https:"].includes(url.protocol) ? url.href : "";
+      } catch {
+        return "";
+      }
+    }
+
+    function findEvent(id) {
+      return state.events.find((event) => event.id === id);
+    }
+
+    function getSelectedEvent() {
+      return state.selectedId ? findEvent(state.selectedId) : null;
+    }
+
+    function normalizeEvents(events) {
+      return events
+        .map((event) => ({
+          id: String(event.id || makeId()),
+          year: Number(event.year),
+          month: event.month === "" || event.month == null ? "" : Number(event.month),
+          day: event.day === "" || event.day == null ? "" : Number(event.day),
+          title: String(event.title || "無題"),
+          category: knownCategory(event.category).name,
+          region: String(event.region || ""),
+          importance: Math.max(1, Math.min(5, Number(event.importance || 3))),
+          note: String(event.note || ""),
+          source: String(event.source || "")
+        }))
+        .filter((event) => Number.isInteger(event.year) && event.year !== 0);
+    }
+
+    function cloneEvents(events) {
+      return events.map((event) => ({ ...event, id: makeId() }));
+    }
+
+    function persist() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.events));
+      setSaveState("自動保存されています");
+    }
+
+    function setSaveState(text) {
+      els.saveState.textContent = text;
+      clearTimeout(setSaveState.timer);
+      setSaveState.timer = setTimeout(() => {
+        els.saveState.textContent = "自動保存されています";
+      }, 1600);
+    }
+
+    function exportJson() {
+      const payload = {
+        title: els.projectTitle.value.trim() || "歴史年表メーカー",
+        exportedAt: new Date().toISOString(),
+        events: [...state.events].sort(compareEvents)
+      };
+      downloadFile(`${fileBaseName()}-timeline.json`, JSON.stringify(payload, null, 2), "application/json");
+      toast("JSONを書き出しました");
+    }
+
+    function exportCsv() {
+      const rows = [
+        ["年", "月", "日", "タイトル", "分類", "地域", "重要度", "メモ", "出典URL"],
+        ...[...state.events].sort(compareEvents).map((event) => [
+          event.year,
+          event.month || "",
+          event.day || "",
+          event.title,
+          knownCategory(event.category).name,
+          event.region || "",
+          event.importance || 1,
+          event.note || "",
+          event.source || ""
+        ])
+      ];
+      const csv = rows.map((row) => row.map(csvCell).join(",")).join("\n");
+      downloadFile(`${fileBaseName()}-timeline.csv`, "\ufeff" + csv, "text/csv;charset=utf-8");
+      toast("CSVを書き出しました");
+    }
+
+    function importJson(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(String(reader.result || ""));
+          const incoming = Array.isArray(parsed) ? parsed : parsed.events;
+          if (!Array.isArray(incoming)) throw new Error("events missing");
+          if (!confirm("読み込んだJSONで現在の年表を置き換えますか？")) return;
+          state.events = normalizeEvents(incoming);
+          state.selectedId = state.events[0]?.id || null;
+          if (parsed.title) {
+            els.projectTitle.value = String(parsed.title).slice(0, 48);
+            localStorage.setItem(TITLE_KEY, els.projectTitle.value);
+          }
+          resetForm(false);
+          persist();
+          renderAll();
+          toast("JSONを読み込みました");
+        } catch {
+          toast("JSONを読み込めませんでした");
+        } finally {
+          els.fileInput.value = "";
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function downloadFile(filename, content, type) {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function csvCell(value) {
+      const text = String(value ?? "");
+      return `"${text.replaceAll('"', '""')}"`;
+    }
+
+    function fileBaseName() {
+      return (els.projectTitle.value.trim() || "history")
+        .replace(/[\\/:*?"<>|]+/g, "-")
+        .replace(/\s+/g, "-")
+        .slice(0, 40);
+    }
+
+    function makeId() {
+      if (globalThis.crypto && typeof crypto.randomUUID === "function") return crypto.randomUUID();
+      return `event-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function toast(message) {
+      els.toast.textContent = message;
+      els.toast.dataset.visible = "true";
+      clearTimeout(toast.timer);
+      toast.timer = setTimeout(() => {
+        els.toast.dataset.visible = "false";
+      }, 2200);
+    }
+
+    boot();
+  </script>
+</body>
+</html>
