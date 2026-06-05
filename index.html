@@ -811,6 +811,37 @@
       min-width: 0;
     }
 
+    .mobile-year-guide {
+      position: relative;
+      margin: 6px 0 2px;
+      padding-left: 28px;
+      color: #3d4a43;
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: 0.02em;
+    }
+
+    .mobile-year-guide::before {
+      content: "";
+      position: absolute;
+      left: 7px;
+      top: 50%;
+      width: 16px;
+      height: 1px;
+      background: rgba(36, 49, 44, 0.34);
+    }
+
+    .mobile-year-guide span {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      padding: 3px 9px;
+      box-shadow: 0 1px 0 rgba(32, 36, 33, 0.04);
+    }
+
     .mobile-timeline-dot {
       position: absolute;
       left: 6px;
@@ -2117,7 +2148,7 @@
 
     function fillForm(item) {
       els.yearInput.value = item.year;
-      els.endYearInput.value = eventEndYear(item) !== item.year ? eventEndYear(item) : "";
+      els.endYearInput.value = hasEndYear(item) && eventEndYear(item) !== item.year ? eventEndYear(item) : "";
       els.monthInput.value = item.month || "";
       els.dayInput.value = item.day || "";
       els.titleEventInput.value = item.title;
@@ -2290,9 +2321,38 @@
     }
 
     function renderMobileTimeline(filtered) {
-      const cards = filtered.map((event) => {
+      const years = filtered.flatMap((event) => [Number(event.year), eventEndYear(event)]);
+      const rawMin = Math.min(...years);
+      const rawMax = Math.max(...years);
+      const minYear = rawMin === rawMax ? rawMin - 1 : rawMin;
+      const maxYear = rawMin === rawMax ? rawMax + 1 : rawMax;
+      const selectedInterval = timelineIntervalValue();
+      const guideTicks = buildTicks(minYear, maxYear, selectedInterval).sort((a, b) => a - b);
+      let nextGuideIndex = 0;
+      let lastGuideLabel = "";
+
+      const cards = filtered.map((event, index) => {
         const category = knownCategory(event.category);
+        const eventYear = Number(event.year);
+        const guideParts = [];
+
+        if (index === 0) {
+          lastGuideLabel = formatYear(eventYear);
+          guideParts.push(`<div class="mobile-year-guide"><span>${escapeHtml(lastGuideLabel)}から</span></div>`);
+          while (nextGuideIndex < guideTicks.length && guideTicks[nextGuideIndex] <= eventYear) nextGuideIndex += 1;
+        } else {
+          while (nextGuideIndex < guideTicks.length && guideTicks[nextGuideIndex] <= eventYear) {
+            const label = formatYear(guideTicks[nextGuideIndex]);
+            if (label !== lastGuideLabel) {
+              guideParts.push(`<div class="mobile-year-guide"><span>${escapeHtml(label)}から</span></div>`);
+              lastGuideLabel = label;
+            }
+            nextGuideIndex += 1;
+          }
+        }
+
         return `
+          ${guideParts.join("")}
           <div class="mobile-timeline-item" style="--event-color: ${category.color};">
             <span class="mobile-timeline-dot" aria-hidden="true"></span>
             <article class="mobile-timeline-card" data-event-id="${escapeHtml(event.id)}" data-selected="${state.selectedId === event.id}" style="--event-color: ${category.color};">
@@ -2301,6 +2361,7 @@
               <div class="event-meta">
                 <span class="category-badge"><span class="swatch" style="--chip-color: ${category.color}" aria-hidden="true"></span>${escapeHtml(category.name)}</span>
                 <span>${escapeHtml(event.region || "地域未設定")}</span>
+                ${isRangeEvent(event) ? `<span class="range-badge">期間</span>` : ""}
                 <span class="importance">${importanceDots(event.importance)}</span>
               </div>
               ${event.note ? `<p class="panel-note">${escapeHtml(event.note)}</p>` : ""}
@@ -2579,13 +2640,19 @@
       return `${year.toLocaleString("ja-JP")}年`;
     }
 
+    function hasEndYear(event) {
+      const raw = event?.endYear;
+      if (raw === "" || raw == null) return false;
+      const value = Number(raw);
+      return Number.isInteger(value);
+    }
+
     function eventEndYear(event) {
-      const value = Number(event.endYear);
-      return Number.isInteger(value) ? value : Number(event.year);
+      return hasEndYear(event) ? Number(event.endYear) : Number(event.year);
     }
 
     function isRangeEvent(event) {
-      return Number.isInteger(Number(event.endYear)) && Number(event.endYear) !== Number(event.year);
+      return hasEndYear(event) && Number(event.endYear) !== Number(event.year);
     }
 
     function formatDate(event) {
@@ -2880,7 +2947,7 @@
         });
         return {
           year: record.year,
-          endYear: record.endYear || "",
+          endYear: record.endYear === undefined ? "" : record.endYear,
           month: record.month || "",
           day: record.day || "",
           title: record.title,
