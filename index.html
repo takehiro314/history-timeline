@@ -420,7 +420,8 @@
     }
 
     .timeline-spacing-control,
-    .timeline-year-scale-control {
+    .timeline-year-scale-control,
+    .region-filter-control {
       display: flex;
       align-items: center;
       gap: 8px;
@@ -432,14 +433,17 @@
     }
 
     .timeline-spacing-control label,
-    .timeline-year-scale-control label {
+    .timeline-year-scale-control label,
+    .region-filter-control label {
       font-size: 12px;
       color: var(--muted);
       font-weight: 700;
       white-space: nowrap;
     }
 
-    .timeline-spacing-control select {
+    .timeline-spacing-control select,
+    .timeline-year-scale-control select,
+    .region-filter-control select {
       min-height: 34px;
       border: 1px solid var(--line);
       border-radius: var(--radius);
@@ -450,9 +454,9 @@
       width: 100%;
     }
 
-    .timeline-year-scale-control input[type="range"] {
+    .timeline-year-scale-control select {
       flex: 1 1 auto;
-      width: 130px;
+      min-width: 110px;
     }
 
     .timeline-year-scale-control strong {
@@ -461,7 +465,9 @@
       font-size: 12px;
     }
 
-    .timeline-spacing-control select:focus {
+    .timeline-spacing-control select:focus,
+    .timeline-year-scale-control select:focus,
+    .region-filter-control select:focus {
       border-color: var(--teal);
       box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.16);
     }
@@ -535,6 +541,21 @@
         linear-gradient(90deg, rgba(15, 118, 110, 0.05) 1px, transparent 1px),
         #fbfcfa;
       background-size: 80px 100%;
+    }
+
+    .timeline-scroll[data-draggable="true"] {
+      cursor: grab;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .timeline-scroll[data-draggable="true"].is-dragging {
+      cursor: grabbing;
+      scroll-behavior: auto;
+    }
+
+    .timeline-scroll[data-draggable="true"].is-dragging * {
+      cursor: grabbing !important;
     }
 
     .timeline-canvas {
@@ -1330,18 +1351,20 @@
       }
 
       .timeline-spacing-control,
-      .timeline-year-scale-control {
+      .timeline-year-scale-control,
+      .region-filter-control {
         width: 100%;
         min-width: 100%;
         display: grid;
         grid-template-columns: auto 1fr auto;
       }
 
-      .timeline-spacing-control {
+      .timeline-spacing-control,
+      .region-filter-control {
         grid-template-columns: auto 1fr;
       }
 
-      .timeline-year-scale-control input[type="range"] {
+      .timeline-year-scale-control select {
         width: 100%;
       }
 
@@ -1424,6 +1447,125 @@
       }
     }
 
+    .print-timeline {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+      border-top: 3px solid #1f2933;
+      padding-top: 10px;
+    }
+
+    .print-event-row {
+      display: grid;
+      grid-template-columns: 112px 22px minmax(0, 1fr);
+      gap: 10px;
+      break-inside: avoid;
+      page-break-inside: avoid;
+      align-items: stretch;
+    }
+
+    .print-event-date {
+      font-size: 11px;
+      font-weight: 850;
+      line-height: 1.35;
+      color: #111827;
+      text-align: right;
+      padding-top: 7px;
+    }
+
+    .print-event-axis {
+      position: relative;
+      min-height: 100%;
+    }
+
+    .print-event-axis::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: -10px;
+      width: 2px;
+      transform: translateX(-50%);
+      background: #9ca3af;
+    }
+
+    .print-event-dot {
+      position: absolute;
+      left: 50%;
+      top: 11px;
+      width: 12px;
+      height: 12px;
+      transform: translateX(-50%) rotate(45deg);
+      border: 2px solid #fff;
+      background: var(--event-color, #0f766e);
+      box-shadow: 0 0 0 1px #374151;
+      z-index: 1;
+    }
+
+    .print-event-card {
+      border: 1px solid #cbd5e1;
+      border-left: 5px solid var(--event-color, #0f766e);
+      border-radius: 7px;
+      background: #fff;
+      padding: 7px 9px;
+      display: grid;
+      gap: 4px;
+    }
+
+    .print-event-row[data-range="true"] .print-event-card {
+      background: color-mix(in srgb, var(--event-color, #0f766e) 13%, #fff);
+      border-left-width: 8px;
+    }
+
+    .print-event-row[data-range="true"] .print-event-card::before {
+      content: "";
+      display: block;
+      width: 100%;
+      height: 5px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--event-color, #0f766e) 92%, #111);
+      margin-bottom: 2px;
+    }
+
+    .print-event-title {
+      font-size: 13px;
+      font-weight: 850;
+      line-height: 1.35;
+    }
+
+    .print-event-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px 8px;
+      color: #4b5563;
+      font-size: 10.5px;
+      line-height: 1.35;
+    }
+
+    .print-event-badge {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid #cbd5e1;
+      border-radius: 999px;
+      padding: 1px 6px;
+      font-weight: 800;
+      color: #111827;
+      background: #f8fafc;
+    }
+
+    .print-event-range-badge {
+      color: #fff;
+      background: color-mix(in srgb, var(--event-color, #0f766e) 86%, #111);
+      border-color: transparent;
+    }
+
+    .print-event-note {
+      margin: 0;
+      color: #374151;
+      font-size: 10.5px;
+      line-height: 1.45;
+    }
+
     @media print {
       @page {
         margin: 12mm;
@@ -1475,6 +1617,14 @@
       }
 
       .print-table tr {
+        break-inside: avoid;
+      }
+
+      .print-timeline {
+        display: grid !important;
+      }
+
+      .print-event-row {
         break-inside: avoid;
       }
     }
@@ -1687,6 +1837,7 @@
               <label for="timelineIntervalSelect">年代間隔</label>
               <select id="timelineIntervalSelect" aria-label="年表に表示する年代の間隔">
                 <option value="auto">自動</option>
+                <option value="1">1年</option>
                 <option value="10">10年</option>
                 <option value="25">25年</option>
                 <option value="50">50年</option>
@@ -1697,9 +1848,15 @@
               </select>
             </div>
             <div class="timeline-year-scale-control">
-              <label for="yearScaleRange">1年の幅</label>
-              <input id="yearScaleRange" type="range" min="4" max="240" value="16" step="2" aria-label="年表で1年を何ピクセルとして表示するか">
-              <strong id="yearScaleLabel">16px</strong>
+              <label for="yearScaleSelect">1年の幅</label>
+              <select id="yearScaleSelect" aria-label="年表で1年を何ピクセルとして表示するか"></select>
+              <strong id="yearScaleLabel">15px</strong>
+            </div>
+            <div class="region-filter-control">
+              <label for="regionFilterSelect">地域</label>
+              <select id="regionFilterSelect" aria-label="表示する地域">
+                <option value="すべて">すべて</option>
+              </select>
             </div>
           </div>
           <div id="categoryChips" class="chips" aria-label="分類フィルター"></div>
@@ -2030,14 +2187,25 @@
     const state = {
       events: [],
       activeCategory: "すべて",
+      activeRegion: "すべて",
       minImportance: 1,
       timelineInterval: "auto",
-      yearScale: 16,
+      yearScale: 15,
       query: "",
       view: "timeline",
       selectedId: null,
       pendingCsvEvents: [],
       pendingCsvFileName: ""
+    };
+
+    const timelineDrag = {
+      active: false,
+      pointerId: null,
+      startX: 0,
+      startY: 0,
+      scrollLeft: 0,
+      scrollTop: 0,
+      moved: false
     };
 
     const els = {
@@ -2069,8 +2237,9 @@
       importanceRange: document.getElementById("importanceRange"),
       importanceLabel: document.getElementById("importanceLabel"),
       timelineIntervalSelect: document.getElementById("timelineIntervalSelect"),
-      yearScaleRange: document.getElementById("yearScaleRange"),
+      yearScaleSelect: document.getElementById("yearScaleSelect"),
       yearScaleLabel: document.getElementById("yearScaleLabel"),
+      regionFilterSelect: document.getElementById("regionFilterSelect"),
       sampleBtn: document.getElementById("sampleBtn"),
       clearBtn: document.getElementById("clearBtn"),
       countMetric: document.getElementById("countMetric"),
@@ -2109,6 +2278,7 @@
 
     function boot() {
       populateCategorySelect();
+      populateYearScaleSelect();
       load();
       renderAll();
       bindEvents();
@@ -2118,6 +2288,15 @@
       els.categoryInput.innerHTML = categories
         .map((category) => `<option value="${escapeHtml(category.name)}">${escapeHtml(category.name)}</option>`)
         .join("");
+    }
+
+    function populateYearScaleSelect() {
+      const values = [];
+      for (let value = 5; value <= 240; value += 5) values.push(value);
+      els.yearScaleSelect.innerHTML = values
+        .map((value) => `<option value="${value}">${value}px</option>`)
+        .join("");
+      els.yearScaleSelect.value = String(state.yearScale);
     }
 
     function load() {
@@ -2196,8 +2375,13 @@
         renderAll();
       });
 
-      els.yearScaleRange.addEventListener("input", () => {
-        state.yearScale = timelineYearScaleValue(els.yearScaleRange.value);
+      els.yearScaleSelect.addEventListener("change", () => {
+        state.yearScale = timelineYearScaleValue(els.yearScaleSelect.value);
+        renderAll();
+      });
+
+      els.regionFilterSelect.addEventListener("change", () => {
+        state.activeRegion = els.regionFilterSelect.value;
         renderAll();
       });
 
@@ -2209,6 +2393,11 @@
       });
 
       els.timelineCanvas.addEventListener("click", handleTimelineAction);
+      els.timelineView.addEventListener("pointerdown", startTimelineDrag);
+      els.timelineView.addEventListener("pointermove", moveTimelineDrag);
+      els.timelineView.addEventListener("pointerup", endTimelineDrag);
+      els.timelineView.addEventListener("pointercancel", endTimelineDrag);
+      els.timelineView.addEventListener("lostpointercapture", endTimelineDrag);
       els.tableBody.addEventListener("click", handleTableAction);
 
       els.sampleBtn.addEventListener("click", () => {
@@ -2227,6 +2416,7 @@
         state.events = [];
         state.selectedId = null;
         state.activeCategory = "すべて";
+        state.activeRegion = "すべて";
         state.minImportance = 1;
         state.query = "";
         els.searchInput.value = "";
@@ -2374,7 +2564,61 @@
       removeEvent(item.id);
     }
 
+    function startTimelineDrag(event) {
+      if (state.view !== "timeline" || isCompactViewport()) return;
+      if (event.button !== 0) return;
+      if (event.target.closest("button, a, input, select, textarea, [data-action]")) return;
+      if (els.timelineView.scrollWidth <= els.timelineView.clientWidth + 4) return;
+
+      timelineDrag.active = true;
+      timelineDrag.pointerId = event.pointerId;
+      timelineDrag.startX = event.clientX;
+      timelineDrag.startY = event.clientY;
+      timelineDrag.scrollLeft = els.timelineView.scrollLeft;
+      timelineDrag.scrollTop = els.timelineView.scrollTop;
+      timelineDrag.moved = false;
+      els.timelineView.classList.add("is-dragging");
+      els.timelineView.setPointerCapture?.(event.pointerId);
+    }
+
+    function moveTimelineDrag(event) {
+      if (!timelineDrag.active || event.pointerId !== timelineDrag.pointerId) return;
+      const dx = event.clientX - timelineDrag.startX;
+      const dy = event.clientY - timelineDrag.startY;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) timelineDrag.moved = true;
+      els.timelineView.scrollLeft = timelineDrag.scrollLeft - dx;
+      els.timelineView.scrollTop = timelineDrag.scrollTop - dy;
+      event.preventDefault();
+    }
+
+    function endTimelineDrag(event) {
+      if (!timelineDrag.active) return;
+      if (event?.pointerId != null && event.pointerId !== timelineDrag.pointerId) return;
+      timelineDrag.active = false;
+      timelineDrag.pointerId = null;
+      els.timelineView.classList.remove("is-dragging");
+      if (event?.pointerId != null) {
+        try {
+          els.timelineView.releasePointerCapture?.(event.pointerId);
+        } catch {
+          // captureが解除済みの場合は何もしない
+        }
+      }
+      if (timelineDrag.moved) {
+        window.setTimeout(() => {
+          timelineDrag.moved = false;
+        }, 0);
+      }
+    }
+
     function handleTimelineAction(event) {
+      if (timelineDrag.moved) {
+        event.preventDefault();
+        event.stopPropagation();
+        timelineDrag.moved = false;
+        return;
+      }
+
       const button = event.target.closest("button[data-action]");
       if (button) {
         const id = button.dataset.id;
@@ -2432,6 +2676,7 @@
     function renderAll() {
       const filtered = getFilteredEvents();
       renderCategoryChips();
+      renderRegionFilter();
       renderTabs();
       renderMetrics(filtered);
       renderTimeline(filtered);
@@ -2441,8 +2686,9 @@
       els.importanceRange.value = state.minImportance;
       els.importanceLabel.textContent = `${state.minImportance}以上`;
       els.timelineIntervalSelect.value = state.timelineInterval;
-      els.yearScaleRange.value = state.yearScale;
+      els.yearScaleSelect.value = String(state.yearScale);
       els.yearScaleLabel.textContent = `${state.yearScale}px`;
+      els.regionFilterSelect.value = state.activeRegion;
       els.timelineView.hidden = state.view !== "timeline";
       els.listView.style.display = state.view === "list" ? "block" : "none";
       els.csvImportView.style.display = state.view === "csv" ? "block" : "none";
@@ -2479,6 +2725,20 @@
       `).join("");
     }
 
+    function renderRegionFilter() {
+      const regions = [...new Set(state.events
+        .map((event) => String(event.region || "").trim())
+        .filter(Boolean))].sort((a, b) => a.localeCompare(b, "ja"));
+      if (state.activeRegion !== "すべて" && !regions.includes(state.activeRegion)) {
+        state.activeRegion = "すべて";
+      }
+      const options = ["すべて", ...regions];
+      els.regionFilterSelect.innerHTML = options
+        .map((region) => `<option value="${escapeHtml(region)}">${escapeHtml(region)}</option>`)
+        .join("");
+      els.regionFilterSelect.value = state.activeRegion;
+    }
+
     function renderTabs() {
       document.querySelectorAll(".tab-button").forEach((button) => {
         button.setAttribute("aria-selected", String(button.dataset.view === state.view));
@@ -2506,6 +2766,7 @@
     }
 
     function renderMobileTimeline(filtered) {
+      els.timelineView.dataset.draggable = "false";
       const years = filtered.flatMap((event) => [Number(event.year), eventEndYear(event)]);
       const rawMin = Math.min(...years);
       const rawMax = Math.max(...years);
@@ -2605,6 +2866,7 @@
 
     function renderTimeline(filtered) {
       if (!filtered.length) {
+        els.timelineView.dataset.draggable = "false";
         els.timelineCanvas.style.width = "100%";
         els.timelineCanvas.style.height = "360px";
         els.timelineCanvas.innerHTML = `
@@ -2619,9 +2881,12 @@
       }
 
       if (isCompactViewport()) {
+        els.timelineView.dataset.draggable = "false";
         renderMobileTimeline(filtered);
         return;
       }
+
+      els.timelineView.dataset.draggable = "true";
 
       const rawMin = Math.min(...filtered.map((event) => event.year));
       const rawMax = Math.max(...filtered.map((event) => eventEndYear(event)));
@@ -2816,6 +3081,7 @@
       const query = state.query;
       return [...state.events]
         .filter((event) => state.activeCategory === "すべて" || knownCategory(event.category).name === state.activeCategory)
+        .filter((event) => state.activeRegion === "すべて" || String(event.region || "").trim() === state.activeRegion)
         .filter((event) => Number(event.importance || 1) >= state.minImportance)
         .filter((event) => {
           if (!query) return true;
@@ -2842,8 +3108,9 @@
 
     function timelineYearScaleValue(value) {
       const parsed = Number(value);
-      if (!Number.isFinite(parsed)) return 16;
-      return Math.max(4, Math.min(240, Math.round(parsed)));
+      if (!Number.isFinite(parsed)) return 15;
+      const roundedToFive = Math.round(parsed / 5) * 5;
+      return Math.max(5, Math.min(240, roundedToFive));
     }
 
     function timelinePixelsPerYear() {
@@ -3078,20 +3345,35 @@
         metaParts.unshift(`${formatDate(events[0])} - ${formatDate(events[events.length - 1])}`);
       }
 
-      els.printTitle.textContent = title;
-      els.printMeta.textContent = metaParts.join(" / ");
-      els.printBody.innerHTML = events.length
-        ? events.map((event) => `
-          <tr>
-            <td>${escapeHtml(formatDate(event))}</td>
-            <td>${escapeHtml(event.title)}</td>
-            <td>${escapeHtml(knownCategory(event.category).name)}</td>
-            <td>${escapeHtml(event.region || "")}</td>
-            <td>${escapeHtml(String(event.importance || 1))}</td>
-            <td>${escapeHtml(event.note || "")}</td>
-          </tr>
-        `).join("")
-        : '<tr><td colspan="6">印刷できる事件がありません。</td></tr>';
+      const body = events.length
+        ? `<div class="print-timeline" role="list">${events.map((event) => {
+            const category = knownCategory(event.category);
+            const range = isRangeEvent(event);
+            const meta = [
+              `<span class="print-event-badge">${escapeHtml(category.name)}</span>`,
+              event.region ? `<span>${escapeHtml(event.region)}</span>` : "",
+              range ? `<span class="print-event-badge print-event-range-badge">期間</span>` : "",
+              `<span>重要度 ${escapeHtml(String(event.importance || 1))}</span>`
+            ].filter(Boolean).join("");
+            return `
+              <section class="print-event-row" data-range="${range}" style="--event-color: ${category.color};" role="listitem">
+                <div class="print-event-date">${escapeHtml(formatDate(event))}</div>
+                <div class="print-event-axis" aria-hidden="true"><span class="print-event-dot"></span></div>
+                <div class="print-event-card">
+                  <div class="print-event-title">${escapeHtml(event.title)}</div>
+                  <div class="print-event-meta">${meta}</div>
+                  ${event.note ? `<p class="print-event-note">${escapeHtml(event.note)}</p>` : ""}
+                </div>
+              </section>
+            `;
+          }).join("")}</div>`
+        : '<div class="empty-state"><div><strong>印刷できる事件がありません</strong><span>条件に合う事件を追加または表示してください。</span></div></div>';
+
+      els.printSheet.innerHTML = `
+        <h1 class="print-title">${escapeHtml(title)}</h1>
+        <p class="print-meta">${escapeHtml(metaParts.join(" / "))}</p>
+        ${body}
+      `;
     }
 
     function printTimeline() {
