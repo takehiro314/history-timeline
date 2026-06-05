@@ -589,6 +589,32 @@
       z-index: 3;
     }
 
+    .timeline-event[data-range="true"] {
+      width: var(--range-card-width, 228px);
+      min-width: 228px;
+      max-width: none;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: start;
+    }
+
+    .timeline-event[data-range="true"] .event-date,
+    .timeline-event[data-range="true"] .event-title,
+    .timeline-event[data-range="true"] .event-meta {
+      grid-column: 1 / -1;
+    }
+
+    .timeline-event[data-range="true"]::before {
+      content: "";
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      top: 7px;
+      height: 4px;
+      border-radius: 999px;
+      background: var(--event-color, var(--teal));
+      opacity: 0.28;
+    }
+
     .event-date {
       color: var(--event-color, var(--teal));
       font-size: 12px;
@@ -788,50 +814,65 @@
 
     .mobile-timeline {
       position: relative;
-      display: grid;
-      gap: 12px;
       width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
       padding: 14px 12px 18px;
       background: #fbfcfa;
     }
 
-    .mobile-timeline::before {
+    .mobile-timeline-track {
+      position: relative;
+      min-width: 100%;
+      min-height: 360px;
+    }
+
+    .mobile-timeline-track::before {
       content: "";
       position: absolute;
       left: 24px;
-      top: 20px;
-      bottom: 20px;
+      top: 8px;
+      bottom: 8px;
       width: 2px;
       background: rgba(15, 118, 110, 0.24);
     }
 
     .mobile-timeline-item {
-      position: relative;
-      padding-left: 28px;
+      position: absolute;
       min-width: 0;
+      padding-left: 0;
     }
 
     .mobile-year-guide {
-      position: relative;
-      margin: 6px 0 2px;
-      padding-left: 28px;
+      position: absolute;
+      left: 0;
+      right: 0;
+      min-width: 100%;
+      height: 1px;
+      border-top: 1px dashed rgba(36, 49, 44, 0.22);
       color: #3d4a43;
       font-size: 12px;
       font-weight: 850;
       letter-spacing: 0.02em;
+      pointer-events: none;
     }
 
     .mobile-year-guide::before {
       content: "";
       position: absolute;
-      left: 7px;
-      top: 50%;
-      width: 16px;
-      height: 1px;
-      background: rgba(36, 49, 44, 0.34);
+      left: 17px;
+      top: -5px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #fbfcfa;
+      border: 2px solid rgba(15, 118, 110, 0.38);
     }
 
     .mobile-year-guide span {
+      position: absolute;
+      left: 36px;
+      top: -13px;
       display: inline-flex;
       align-items: center;
       min-height: 24px;
@@ -840,11 +881,12 @@
       background: #fff;
       padding: 3px 9px;
       box-shadow: 0 1px 0 rgba(32, 36, 33, 0.04);
+      white-space: nowrap;
     }
 
     .mobile-timeline-dot {
       position: absolute;
-      left: 6px;
+      left: -31px;
       top: 18px;
       width: 13px;
       height: 13px;
@@ -852,11 +894,24 @@
       border: 2px solid #fff;
       background: var(--event-color, var(--teal));
       box-shadow: 0 0 0 1px rgba(32, 36, 33, 0.22);
-      z-index: 1;
+      z-index: 2;
+    }
+
+    .mobile-duration-bar {
+      position: absolute;
+      left: -26px;
+      top: 24px;
+      bottom: 10px;
+      width: 4px;
+      min-height: 24px;
+      border-radius: 999px;
+      background: var(--event-color, var(--teal));
+      opacity: 0.32;
     }
 
     .mobile-timeline-card {
       width: 100%;
+      min-height: var(--mobile-card-height, 0px);
       border: 1px solid var(--line);
       border-left: 5px solid var(--event-color, var(--teal));
       border-radius: var(--radius);
@@ -865,11 +920,18 @@
       padding: 11px 11px 10px;
       display: grid;
       gap: 8px;
+      align-content: start;
     }
 
     .mobile-timeline-card[data-selected="true"] {
       border-color: var(--event-color, var(--teal));
       box-shadow: var(--shadow);
+    }
+
+    .mobile-lane-note {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
     }
 
     .print-sheet {
@@ -2328,40 +2390,70 @@
       const maxYear = rawMin === rawMax ? rawMax + 1 : rawMax;
       const selectedInterval = timelineIntervalValue();
       const guideTicks = buildTicks(minYear, maxYear, selectedInterval).sort((a, b) => a - b);
-      let nextGuideIndex = 0;
-      let lastGuideLabel = "";
+      const guideInterval = selectedInterval || Math.max(1, Math.min(...guideTicks.slice(1).map((tick, index) => Math.abs(tick - guideTicks[index])).filter(Boolean)) || 50);
+      const pixelsPerYear = Math.max(0.16, Math.min(14, 82 / guideInterval));
+      const topPadding = 42;
+      const bottomPadding = 48;
+      const axisLeft = 24;
+      const laneGap = 10;
+      const minLaneWidth = 176;
+      const viewportWidth = Math.max(320, els.timelineView.clientWidth || window.innerWidth || 360);
+      const availableWidth = Math.max(180, viewportWidth - axisLeft - 54);
+      const baseCardHeight = 112;
+      const minItemHeight = 118;
 
-      const cards = filtered.map((event, index) => {
+      const positionedSeed = filtered.map((event) => {
+        const startYear = Number(event.year);
+        const endYear = eventEndYear(event);
+        const startY = topPadding + (Math.min(startYear, endYear) - minYear) * pixelsPerYear;
+        const endY = topPadding + (Math.max(startYear, endYear) - minYear) * pixelsPerYear;
+        const durationHeight = Math.max(0, endY - startY);
+        const visualHeight = isRangeEvent(event)
+          ? Math.max(minItemHeight, durationHeight + 42)
+          : minItemHeight;
+        return { event, startY, endY, durationHeight, visualHeight };
+      }).sort((a, b) => a.startY - b.startY || b.endY - a.endY || compareEvents(a.event, b.event));
+
+      const lanes = [];
+      const positioned = positionedSeed.map((item) => {
+        const laneIndex = lanes.findIndex((laneEnd) => item.startY >= laneEnd + 10);
+        const lane = laneIndex === -1 ? lanes.length : laneIndex;
+        lanes[lane] = Math.max(lanes[lane] || 0, item.startY + item.visualHeight);
+        return { ...item, lane };
+      });
+
+      const laneCount = Math.max(1, lanes.length);
+      const laneWidth = Math.max(minLaneWidth, Math.floor((availableWidth - laneGap * (Math.min(laneCount, 2) - 1)) / Math.min(laneCount, 2)));
+      const trackWidth = axisLeft + 32 + laneCount * laneWidth + (laneCount - 1) * laneGap + 12;
+      const trackHeight = Math.max(360, topPadding + (maxYear - minYear) * pixelsPerYear + bottomPadding, ...lanes.map((value) => value + bottomPadding));
+
+      const guides = guideTicks.map((year) => {
+        const y = topPadding + (year - minYear) * pixelsPerYear;
+        return `<div class="mobile-year-guide" style="top: ${Math.round(y)}px;"><span>${escapeHtml(formatYear(year))}</span></div>`;
+      }).join("");
+
+      const cards = positioned.map(({ event, startY, durationHeight, visualHeight, lane }) => {
         const category = knownCategory(event.category);
-        const eventYear = Number(event.year);
-        const guideParts = [];
-
-        if (index === 0) {
-          lastGuideLabel = formatYear(eventYear);
-          guideParts.push(`<div class="mobile-year-guide"><span>${escapeHtml(lastGuideLabel)}から</span></div>`);
-          while (nextGuideIndex < guideTicks.length && guideTicks[nextGuideIndex] <= eventYear) nextGuideIndex += 1;
-        } else {
-          while (nextGuideIndex < guideTicks.length && guideTicks[nextGuideIndex] <= eventYear) {
-            const label = formatYear(guideTicks[nextGuideIndex]);
-            if (label !== lastGuideLabel) {
-              guideParts.push(`<div class="mobile-year-guide"><span>${escapeHtml(label)}から</span></div>`);
-              lastGuideLabel = label;
-            }
-            nextGuideIndex += 1;
-          }
-        }
-
+        const left = axisLeft + 42 + lane * (laneWidth + laneGap);
+        const cardHeight = isRangeEvent(event) ? Math.min(360, Math.max(baseCardHeight, durationHeight + 32)) : 0;
+        const durationBar = isRangeEvent(event)
+          ? `<span class="mobile-duration-bar" aria-hidden="true"></span>`
+          : "";
+        const laneNote = laneCount > 1
+          ? `<span class="mobile-lane-note">重複レーン ${lane + 1}</span>`
+          : "";
         return `
-          ${guideParts.join("")}
-          <div class="mobile-timeline-item" style="--event-color: ${category.color};">
+          <div class="mobile-timeline-item" style="top: ${Math.round(startY)}px; left: ${Math.round(left)}px; width: ${Math.round(laneWidth)}px; min-height: ${Math.round(visualHeight)}px; --event-color: ${category.color};">
+            ${durationBar}
             <span class="mobile-timeline-dot" aria-hidden="true"></span>
-            <article class="mobile-timeline-card" data-event-id="${escapeHtml(event.id)}" data-selected="${state.selectedId === event.id}" style="--event-color: ${category.color};">
+            <article class="mobile-timeline-card" data-event-id="${escapeHtml(event.id)}" data-selected="${state.selectedId === event.id}" style="--event-color: ${category.color}; --mobile-card-height: ${Math.round(cardHeight)}px;">
               <div class="event-date">${escapeHtml(formatDate(event))}</div>
               <h2 class="event-title">${escapeHtml(event.title)}</h2>
               <div class="event-meta">
                 <span class="category-badge"><span class="swatch" style="--chip-color: ${category.color}" aria-hidden="true"></span>${escapeHtml(category.name)}</span>
                 <span>${escapeHtml(event.region || "地域未設定")}</span>
                 ${isRangeEvent(event) ? `<span class="range-badge">期間</span>` : ""}
+                ${laneNote}
                 <span class="importance">${importanceDots(event.importance)}</span>
               </div>
               ${event.note ? `<p class="panel-note">${escapeHtml(event.note)}</p>` : ""}
@@ -2376,7 +2468,7 @@
 
       els.timelineCanvas.style.width = "100%";
       els.timelineCanvas.style.height = "auto";
-      els.timelineCanvas.innerHTML = `<div class="mobile-timeline">${cards}</div>`;
+      els.timelineCanvas.innerHTML = `<div class="mobile-timeline"><div class="mobile-timeline-track" style="width: ${Math.round(trackWidth)}px; min-height: ${Math.round(trackHeight)}px;">${guides}${cards}</div></div>`;
     }
 
     function debounce(fn, wait = 120) {
@@ -2423,19 +2515,38 @@
       const lanes = [];
       const laneHeight = 132;
       const baseTop = 132;
+      const gap = 22;
 
       const positioned = filtered.map((event) => {
         const startX = padding + ((event.year - minYear) / range) * usable;
         const endX = padding + ((eventEndYear(event) - minYear) / range) * usable;
-        const x = (startX + endX) / 2;
-        const visualEndX = isRangeEvent(event) ? endX : startX;
-        let lane = lanes.findIndex((lastX) => x - lastX > cardWidth + 22);
+        const leftX = Math.min(startX, endX);
+        const rightX = Math.max(startX, endX);
+        const rangeWidth = isRangeEvent(event) ? Math.max(cardWidth, rightX - leftX) : cardWidth;
+        const visualLeft = isRangeEvent(event) ? leftX : startX - cardWidth / 2;
+        const visualRight = isRangeEvent(event) ? leftX + rangeWidth : startX + cardWidth / 2;
+        return {
+          event,
+          x: visualLeft + rangeWidth / 2,
+          startX,
+          endX,
+          leftX,
+          rightX,
+          rangeWidth,
+          visualLeft,
+          visualRight,
+          lane: 0
+        };
+      }).sort((a, b) => a.visualLeft - b.visualLeft || compareEvents(a.event, b.event));
+
+      positioned.forEach((item) => {
+        let lane = lanes.findIndex((lastRight) => item.visualLeft - lastRight > gap);
         if (lane === -1) {
           lane = lanes.length;
           lanes.push(-Infinity);
         }
-        lanes[lane] = Math.max(x, visualEndX);
-        return { event, x, startX, endX, lane };
+        item.lane = lane;
+        lanes[lane] = item.visualRight;
       });
 
       const height = Math.max(430, baseTop + (lanes.length || 1) * laneHeight + 44);
@@ -2447,17 +2558,18 @@
         `;
       }).join("");
 
-      const cards = positioned.map(({ event, x, startX, endX, lane }) => {
+      const cards = positioned.map(({ event, x, startX, endX, leftX, rightX, rangeWidth, lane }) => {
         const category = knownCategory(event.category);
         const y = baseTop + lane * laneHeight;
+        const rangeCardWidth = isRangeEvent(event) ? Math.max(cardWidth, rangeWidth) : cardWidth;
         const rangeBar = isRangeEvent(event)
-          ? `<div class="range-bar" style="left: ${Math.min(startX, endX)}px; width: ${Math.max(10, Math.abs(endX - startX))}px; --event-color: ${category.color};"></div>`
+          ? `<div class="range-bar" style="left: ${leftX}px; width: ${Math.max(10, rightX - leftX)}px; --event-color: ${category.color};"></div>`
           : "";
         return `
           ${rangeBar}
           <div class="pin" style="left: ${startX}px; --event-color: ${category.color};"></div>
           ${isRangeEvent(event) ? `<div class="pin" style="left: ${endX}px; --event-color: ${category.color};"></div>` : ""}
-          <article class="timeline-event" data-event-id="${escapeHtml(event.id)}" data-selected="${state.selectedId === event.id}" style="left: ${x}px; top: ${y}px; --event-color: ${category.color};">
+          <article class="timeline-event" data-range="${isRangeEvent(event)}" data-event-id="${escapeHtml(event.id)}" data-selected="${state.selectedId === event.id}" style="left: ${x}px; top: ${y}px; --event-color: ${category.color}; --range-card-width: ${rangeCardWidth}px;">
             <div class="event-date">${escapeHtml(formatDate(event))}</div>
             <h2 class="event-title">${escapeHtml(event.title)}</h2>
             <div class="event-meta">
