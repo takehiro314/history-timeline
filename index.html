@@ -1229,6 +1229,99 @@
       transform: translateY(0);
     }
 
+
+    .view-title-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .timeline-fullscreen-button {
+      width: 34px;
+      height: 34px;
+      flex: 0 0 auto;
+    }
+
+    .timeline-fullscreen-button[hidden] {
+      display: none !important;
+    }
+
+    .timeline-fullscreen {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      background: #fbfcfa;
+      color: var(--ink);
+    }
+
+    .timeline-fullscreen[hidden] {
+      display: none !important;
+    }
+
+    .timeline-fullscreen-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: max(10px, env(safe-area-inset-top)) 12px 10px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(12px);
+    }
+
+    .timeline-fullscreen-title {
+      min-width: 0;
+      display: grid;
+      gap: 2px;
+    }
+
+    .timeline-fullscreen-title strong {
+      font-size: 14px;
+      font-weight: 850;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .timeline-fullscreen-title span {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .timeline-fullscreen-body {
+      overflow: auto;
+      padding: 12px;
+      touch-action: auto;
+      -webkit-overflow-scrolling: touch;
+      background:
+        linear-gradient(90deg, rgba(15, 118, 110, 0.05) 1px, transparent 1px),
+        #fbfcfa;
+      background-size: 80px 100%;
+    }
+
+    .timeline-fullscreen-stage {
+      position: relative;
+      transform-origin: top left;
+    }
+
+    .timeline-fullscreen-stage .timeline-canvas {
+      overflow: visible;
+    }
+
+    .timeline-fullscreen-stage .mobile-timeline {
+      width: max-content;
+      min-width: 100%;
+      overflow: visible;
+    }
+
+    .timeline-fullscreen-stage .event-actions {
+      display: none;
+    }
+
     [hidden] {
       display: none !important;
     }
@@ -1936,9 +2029,23 @@
 
         <section class="panel main-view">
           <div class="view-header">
-            <div class="view-title">
-              <strong id="viewHeading">年表ビュー</strong>
-              <span id="viewSubheading">年代順に自動配置</span>
+            <div class="view-title-row">
+              <button id="timelineFullscreenBtn" class="icon-button timeline-fullscreen-button" type="button" title="年表を全画面表示" aria-label="年表を全画面表示">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M8 3H3v5"></path>
+                  <path d="M16 3h5v5"></path>
+                  <path d="M3 16v5h5"></path>
+                  <path d="M21 16v5h-5"></path>
+                  <path d="M3 3l6 6"></path>
+                  <path d="M21 3l-6 6"></path>
+                  <path d="M3 21l6-6"></path>
+                  <path d="M21 21l-6-6"></path>
+                </svg>
+              </button>
+              <div class="view-title">
+                <strong id="viewHeading">年表ビュー</strong>
+                <span id="viewSubheading">年代順に自動配置</span>
+              </div>
             </div>
             <div class="panel-note" id="rangeText"></div>
           </div>
@@ -2044,6 +2151,22 @@
   </section>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <div id="timelineFullscreen" class="timeline-fullscreen" hidden aria-hidden="true">
+    <div class="timeline-fullscreen-header">
+      <div class="timeline-fullscreen-title">
+        <strong id="timelineFullscreenTitle">年表全体表示</strong>
+        <span>ブラウザ標準のピンチ操作で拡大・縮小できます。閉じると通常画面に戻ります。</span>
+      </div>
+      <button id="timelineFullscreenCloseBtn" class="icon-button" type="button" title="閉じる" aria-label="全画面表示を閉じる">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6 6 18"></path>
+          <path d="m6 6 12 12"></path>
+        </svg>
+      </button>
+    </div>
+    <div id="timelineFullscreenBody" class="timeline-fullscreen-body"></div>
+  </div>
 
   <script>
     const STORAGE_KEY = "history-timeline-maker:v1";
@@ -2293,6 +2416,11 @@
       viewHeading: document.getElementById("viewHeading"),
       viewSubheading: document.getElementById("viewSubheading"),
       rangeText: document.getElementById("rangeText"),
+      timelineFullscreenBtn: document.getElementById("timelineFullscreenBtn"),
+      timelineFullscreen: document.getElementById("timelineFullscreen"),
+      timelineFullscreenTitle: document.getElementById("timelineFullscreenTitle"),
+      timelineFullscreenCloseBtn: document.getElementById("timelineFullscreenCloseBtn"),
+      timelineFullscreenBody: document.getElementById("timelineFullscreenBody"),
       timelineView: document.getElementById("timelineView"),
       timelineCanvas: document.getElementById("timelineCanvas"),
       listView: document.getElementById("listView"),
@@ -2442,10 +2570,21 @@
       els.timelineView.addEventListener("pointerup", endTimelineDrag);
       els.timelineView.addEventListener("pointercancel", endTimelineDrag);
       els.timelineView.addEventListener("lostpointercapture", endTimelineDrag);
-      els.timelineView.addEventListener("touchstart", startTimelinePinch, { passive: false });
-      els.timelineView.addEventListener("touchmove", moveTimelinePinch, { passive: false });
-      els.timelineView.addEventListener("touchend", endTimelinePinch);
-      els.timelineView.addEventListener("touchcancel", endTimelinePinch);
+      els.timelineFullscreenBtn.addEventListener("click", openTimelineFullscreen);
+      els.timelineFullscreenCloseBtn.addEventListener("click", closeTimelineFullscreen);
+      els.timelineFullscreen.addEventListener("click", (event) => {
+        if (event.target === els.timelineFullscreen) closeTimelineFullscreen();
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !els.timelineFullscreen.hidden) closeTimelineFullscreen();
+      });
+      document.addEventListener("fullscreenchange", () => {
+        if (!document.fullscreenElement && !els.timelineFullscreen.hidden) {
+          els.timelineFullscreen.hidden = true;
+          els.timelineFullscreen.setAttribute("aria-hidden", "true");
+          els.timelineFullscreenBody.innerHTML = "";
+        }
+      });
       els.tableBody.addEventListener("click", handleTableAction);
 
       els.sampleBtn.addEventListener("click", () => {
@@ -2716,13 +2855,6 @@
     }
 
     function handleTimelineAction(event) {
-      if (timelinePinch.moved) {
-        event.preventDefault();
-        event.stopPropagation();
-        timelinePinch.moved = false;
-        return;
-      }
-
       if (timelineDrag.moved) {
         event.preventDefault();
         event.stopPropagation();
@@ -2801,6 +2933,7 @@
       els.yearScaleLabel.textContent = `${state.yearScale}px`;
       els.regionFilterSelect.value = state.activeRegion;
       els.timelineView.hidden = state.view !== "timeline";
+      els.timelineFullscreenBtn.hidden = state.view !== "timeline";
       els.listView.style.display = state.view === "list" ? "block" : "none";
       els.csvImportView.style.display = state.view === "csv" ? "block" : "none";
       els.viewHeading.textContent = viewHeading();
@@ -2964,7 +3097,58 @@
 
       els.timelineCanvas.style.width = "100%";
       els.timelineCanvas.style.height = "auto";
-      els.timelineCanvas.innerHTML = `<div class="mobile-timeline"><div class="mobile-zoom-hint">2本指ピンチで縮尺変更（1年=${state.yearScale}px）</div><div class="mobile-timeline-track" style="width: ${Math.round(trackWidth)}px; min-height: ${Math.round(trackHeight)}px;">${guides}${cards}</div></div>`;
+      els.timelineCanvas.innerHTML = `<div class="mobile-timeline"><div class="mobile-timeline-track" style="width: ${Math.round(trackWidth)}px; min-height: ${Math.round(trackHeight)}px;">${guides}${cards}</div></div>`;
+    }
+
+    function openTimelineFullscreen() {
+      if (state.view !== "timeline") {
+        state.view = "timeline";
+        renderAll();
+      }
+
+      const filtered = getFilteredEvents();
+      if (!filtered.length) {
+        toast("全画面表示する年表がありません");
+        return;
+      }
+
+      // 念のため最新の表示状態を複製する。複製なのでピンチ中に再描画せず軽い。
+      renderTimeline(filtered);
+      const sourceWidth = Math.max(els.timelineCanvas.scrollWidth, els.timelineCanvas.offsetWidth, 1);
+      const sourceHeight = Math.max(els.timelineCanvas.scrollHeight, els.timelineCanvas.offsetHeight, 1);
+      const clone = els.timelineCanvas.cloneNode(true);
+      clone.removeAttribute("id");
+      clone.style.width = `${sourceWidth}px`;
+      clone.style.height = `${sourceHeight}px`;
+
+      const viewportWidth = Math.max(320, window.innerWidth || document.documentElement.clientWidth || 320);
+      const viewportHeight = Math.max(320, window.innerHeight || document.documentElement.clientHeight || 320);
+      const fitScale = Math.min(1, Math.max(0.12, Math.min((viewportWidth - 24) / sourceWidth, (viewportHeight - 76) / sourceHeight)));
+
+      els.timelineFullscreenTitle.textContent = els.projectTitle.value || "年表全体表示";
+      els.timelineFullscreenBody.innerHTML = `
+        <div class="timeline-fullscreen-stage" style="width: ${Math.ceil(sourceWidth * fitScale)}px; height: ${Math.ceil(sourceHeight * fitScale)}px; transform: scale(${fitScale});">
+        </div>
+      `;
+      els.timelineFullscreenBody.querySelector(".timeline-fullscreen-stage").appendChild(clone);
+      els.timelineFullscreen.hidden = false;
+      els.timelineFullscreen.setAttribute("aria-hidden", "false");
+      els.timelineFullscreenBody.scrollTo({ left: 0, top: 0 });
+
+      if (els.timelineFullscreen.requestFullscreen) {
+        els.timelineFullscreen.requestFullscreen().catch(() => {
+          // iPhone SafariなどFullscreen API非対応/拒否時は、固定全画面のまま表示する。
+        });
+      }
+    }
+
+    function closeTimelineFullscreen() {
+      if (document.fullscreenElement === els.timelineFullscreen && document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
+      els.timelineFullscreen.hidden = true;
+      els.timelineFullscreen.setAttribute("aria-hidden", "true");
+      els.timelineFullscreenBody.innerHTML = "";
     }
 
     function debounce(fn, wait = 120) {
